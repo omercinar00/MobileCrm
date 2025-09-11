@@ -8,10 +8,10 @@ import {
   Platform,
   View,
   Switch,
-  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useTheme } from '../theme/ThemeContext'; // theme context yolu
+import { useTheme } from '../theme/ThemeContext';
+import projectManagementAndCRMCore from '../core';
 
 export default function LoginScreen({ navigation }: any) {
   const { theme } = useTheme();
@@ -19,16 +19,25 @@ export default function LoginScreen({ navigation }: any) {
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // Kaydedilmiş kullanıcı bilgilerini yükle
   useEffect(() => {
     const loadCredentials = async () => {
       const savedUser = await AsyncStorage.getItem('user');
+      console.log('🚀 ~ loadCredentials ~ savedUser:', savedUser);
       const savedPass = await AsyncStorage.getItem('password');
-      if (savedUser && savedPass) {
+      console.log('🚀 ~ loadCredentials ~ savedPass:', savedPass);
+      const savedRememberMe = await AsyncStorage.getItem('rememberMe');
+      console.log('🚀 ~ loadCredentials ~ savedRememberMe:', savedRememberMe);
+
+      if (savedUser && savedPass && savedRememberMe === 'true') {
         setUsername(savedUser);
         setPassword(savedPass);
         setRememberMe(true);
+      } else {
+        setUsername('');
+        setPassword('');
+        setRememberMe(false);
       }
     };
     loadCredentials();
@@ -40,28 +49,36 @@ export default function LoginScreen({ navigation }: any) {
       return;
     }
 
+    setLoading(true);
+    setErrorMsg('');
+
     try {
-      const user = 'aaa';
-      // await projectManagementAndCRMCore.services.authServices.login(
-      //   username,
-      //   password,
-      // );
-      console.log('🚀 ~ handleLogin ~ user:', user);
+      const userDetail =
+        await projectManagementAndCRMCore.services.authServices.login(
+          username,
+          password,
+        );
 
       if (rememberMe) {
         await AsyncStorage.setItem('user', username);
         await AsyncStorage.setItem('password', password);
+        await AsyncStorage.setItem('userDetail', JSON.stringify(userDetail));
+        await AsyncStorage.setItem('rememberMe', 'true');
       } else {
         await AsyncStorage.removeItem('user');
         await AsyncStorage.removeItem('password');
+        await AsyncStorage.removeItem('userDetail');
+        await AsyncStorage.setItem('rememberMe', 'false'); // unutma!
       }
-
-      // Kullanıcı bilgilerini saklayabiliriz (token yoksa userId vs.)
-      //   await AsyncStorage.setItem('userOid', user.userOid.toString());
-
-      navigation.replace('Home');
+      if (userDetail) {
+        navigation.replace('Home');
+      } else {
+        setErrorMsg('Giriş başarısız. Bilgilerinizi kontrol edin.');
+      }
     } catch (error: any) {
-      Alert.alert('Hata', error.message || 'Giriş başarısız');
+      setErrorMsg(error.message || 'Giriş başarısız');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -70,10 +87,10 @@ export default function LoginScreen({ navigation }: any) {
       style={[styles.container, { backgroundColor: theme.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <Text style={[styles.mainTitle, { color: theme.primary }]}>
-        Giriş Yap
-      </Text>
+      <Text style={[styles.title, { color: theme.primary }]}>Giriş Yap</Text>
+
       {errorMsg ? <Text style={styles.errorText}>{errorMsg}</Text> : null}
+
       <TextInput
         placeholder="Kullanıcı Adı"
         placeholderTextColor={theme.text + '99'}
@@ -85,6 +102,7 @@ export default function LoginScreen({ navigation }: any) {
         ]}
         autoCapitalize="none"
       />
+
       <TextInput
         placeholder="Şifre"
         placeholderTextColor={theme.text + '99'}
@@ -97,7 +115,6 @@ export default function LoginScreen({ navigation }: any) {
         secureTextEntry
       />
 
-      {/* Remember Me Switch */}
       <View style={styles.rememberContainer}>
         <Text style={{ color: theme.text, fontSize: 16 }}>Beni Hatırla</Text>
         <Switch
@@ -109,10 +126,16 @@ export default function LoginScreen({ navigation }: any) {
       </View>
 
       <Pressable
-        style={[styles.button, { backgroundColor: theme.primary }]}
+        style={[
+          styles.button,
+          { backgroundColor: loading ? theme.primary + '88' : theme.primary },
+        ]}
         onPress={handleLogin}
+        disabled={loading}
       >
-        <Text style={styles.buttonText}>Giriş</Text>
+        <Text style={styles.buttonText}>
+          {loading ? 'Giriş Yapılıyor...' : 'Giriş'}
+        </Text>
       </Pressable>
     </KeyboardAvoidingView>
   );
@@ -125,33 +148,42 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  mainTitle: {
+  title: {
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
   },
-  button: {
-    padding: 14,
-    borderRadius: 10,
-    marginVertical: 8,
-    width: '80%',
-    alignItems: 'center',
-  },
-  buttonText: { color: '#fff', fontSize: 18, fontWeight: '600' },
   input: {
     borderWidth: 1,
     width: '80%',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 12,
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 15,
+    fontSize: 16,
   },
-  errorText: { color: 'red', marginBottom: 10 },
+  button: {
+    padding: 15,
+    borderRadius: 10,
+    marginVertical: 10,
+    width: '80%',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  errorText: {
+    color: 'red',
+    marginBottom: 10,
+    fontSize: 14,
+  },
   rememberContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '80%',
-    marginBottom: 12,
+    marginBottom: 15,
   },
 });

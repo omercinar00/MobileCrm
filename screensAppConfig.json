@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Login",
+    "component": "LoginScreen",
+    "headerShown": false
+  },
+  {
+    "name": "Home",
+    "component": "HomeScreen",
+    "headerShown": false,
+    "headerTitle": "Anasayfa"
+  },
+  {
+    "name": "Profile",
+    "component": "ProfileScreen",
+    "headerShown": true,
+    "headerTitle": "Profil"
+  },
+  {
+    "name": "AllList",
+    "component": "AllListScreen",
+    "headerShown": true,
+    "headerTitle": "Tüm Liste"
+  },
+  {
+    "name": "Requests",
+    "component": "RequestsScreen",
+    "headerShown": true,
+    "headerTitle": "Talepler"
+  },
+  {
+    "name": "Settings",
+    "component": "SettingsScreen",
+    "headerShown": true,
+    "headerTitle": "Ayarlar"
+  }
+]

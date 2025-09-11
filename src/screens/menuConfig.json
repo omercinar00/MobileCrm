@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Profil",
+    "screen": "Profile",
+    "icon": "account-circle",
+    "color": "#4caf50"
+  },
+  {
+    "title": "Talepler",
+    "screen": "Requests",
+    "icon": "clipboard-list",
+    "color": "#2196f3"
+  },
+  {
+    "title": "Tüm Liste",
+    "screen": "AllList",
+    "icon": "format-list-bulleted",
+    "color": "#ff9800"
+  },
+  {
+    "title": "Ayarlar",
+    "screen": "Settings",
+    "icon": "cog",
+    "color": "#9c27b0"
+  }
+]

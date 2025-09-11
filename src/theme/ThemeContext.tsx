@@ -1,22 +1,34 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 import { useColorScheme } from 'react-native';
 
-type Theme = {
+export type Theme = {
   background: string;
   text: string;
   primary: string;
+  cardBackground: string;
+  inputBackground: string;
+  errorText: string;
+  shadowColor: string;
 };
 
 const lightTheme: Theme = {
   background: '#f8f8f8',
   text: '#333',
   primary: '#1e90ff',
+  cardBackground: '#ffffff',
+  inputBackground: '#f0f0f0',
+  errorText: '#ff4d4d',
+  shadowColor: '#00000033',
 };
 
 const darkTheme: Theme = {
   background: '#121212',
   text: '#fff',
   primary: '#1e90ff',
+  cardBackground: '#1e1e1e',
+  inputBackground: '#2a2a2a',
+  errorText: '#ff4d4d',
+  shadowColor: '#00000088',
 };
 
 type ThemeContextType = {
