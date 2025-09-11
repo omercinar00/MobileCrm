@@ -149,7 +149,7 @@ export default function ProfileScreen() {
           onChangeText={setBirthDate}
         />
         <TextInput
-          style={[styles.input, { color: theme.text, backgroundColor: '#eee' }]}
+          style={[styles.input, { color: theme.text }]}
           placeholder="Ünvan"
           value={title}
           editable={false}
