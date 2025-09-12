@@ -28,7 +28,6 @@ export default function LoginScreen({ navigation }: any) {
       const savedPass = await AsyncStorage.getItem('password');
       console.log('🚀 ~ loadCredentials ~ savedPass:', savedPass);
       const savedRememberMe = await AsyncStorage.getItem('rememberMe');
-      console.log('🚀 ~ loadCredentials ~ savedRememberMe:', savedRememberMe);
 
       if (savedUser && savedPass && savedRememberMe === 'true') {
         setUsername(savedUser);

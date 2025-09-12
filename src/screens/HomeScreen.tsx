@@ -44,16 +44,12 @@ export default function HomeScreen({ navigation }: any) {
         setUserName(`${parsedUser.Name} ${parsedUser.SurName}`);
 
         if (parsedUser.ProfileImageUrl) {
-          const base64Image =
-            await projectManagementAndCRMCore.services.fileService.getFileByPath(
-              parsedUser.ProfileImageUrl,
-            );
-
           if (parsedUser.ProfileImageUrl) {
             const profileFile =
               await projectManagementAndCRMCore.services.fileService.getFileByPath(
                 parsedUser.ProfileImageUrl,
               );
+            console.log('🚀 ~ loadUser ~ profileFile:', profileFile);
             setProfileImageUri(
               `data:image/jpeg;base64,${profileFile.Base64String}`,
             );
@@ -208,6 +204,21 @@ export default function HomeScreen({ navigation }: any) {
         columnWrapperStyle={styles.menuContainer}
         contentContainerStyle={{ paddingBottom: 20, paddingTop: 10 }}
       />
+      {/* Footer */}
+      <View style={[styles.footer, { backgroundColor: theme.cardBackground }]}>
+        <Pressable
+          style={[styles.footerButton, { backgroundColor: '#C62828' }]}
+          onPress={() => navigation.navigate('ErrorCreate')}
+        >
+          <Text style={styles.footerButtonText}>Hata Gir</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.footerButton, { backgroundColor: '#2E7D32' }]}
+          onPress={() => navigation.navigate('TaskCreate')}
+        >
+          <Text style={styles.footerButtonText}>Talep Gir</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -282,4 +293,27 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   userName: { fontSize: 18, fontWeight: '600' },
+  footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 10,
+    borderTopWidth: 1,
+    borderColor: '#ccc',
+  },
+  footerButton: {
+    flex: 1,
+    marginHorizontal: 10,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  footerButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
 });

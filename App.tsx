@@ -15,6 +15,8 @@ import ProfileScreen from './src/screens/ProfileScreen';
 import AllListScreen from './src/screens/AllListScreen';
 import RequestsScreen from './src/screens/RequestsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import ErrorDetailScreen from './src/screens/ErrorDetailScreen';
+import RequestDetailScreen from './src/screens/RequestDetailScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -25,6 +27,8 @@ const componentMap: Record<string, any> = {
   AllListScreen,
   RequestsScreen,
   SettingsScreen,
+  ErrorDetailScreen,
+  RequestDetailScreen,
 };
 
 export default function App() {

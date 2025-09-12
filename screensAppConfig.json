@@ -26,12 +26,24 @@
     "name": "Requests",
     "component": "RequestsScreen",
     "headerShown": true,
-    "headerTitle": "Talepler"
+    "headerTitle": "Hata/Talep Listem"
   },
   {
     "name": "Settings",
     "component": "SettingsScreen",
     "headerShown": true,
     "headerTitle": "Ayarlar"
+  },
+  {
+    "name": "ErrorDetail",
+    "component": "ErrorDetailScreen",
+    "headerShown": true,
+    "headerTitle": "Hata Detay"
+  },
+  {
+    "name": "RequestDetail",
+    "component": "RequestDetailScreen",
+    "headerShown": true,
+    "headerTitle": "Talep Detay"
   }
 ]
