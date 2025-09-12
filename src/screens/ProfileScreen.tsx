@@ -13,6 +13,7 @@ import {
 import { useTheme } from '../theme/ThemeContext';
 import projectManagementAndCRMCore from '../core';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { formatDate } from '../utils';
 
 export default function ProfileScreen() {
   const { theme } = useTheme();
@@ -49,7 +50,7 @@ export default function ProfileScreen() {
           setCurrentUserInfo(currentUser);
           setName(currentUser.Name);
           setSurname(currentUser.SurName);
-          setBirthDate(currentUser.Birthday?.toString() || '');
+          setBirthDate(formatDate(currentUser.Birthday?.toString() || ''));
           setTitle(
             titles.find(t => t.TitleCode === currentUser.TitleCode)
               ?.TitleName || '',

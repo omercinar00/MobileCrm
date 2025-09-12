@@ -66,3 +66,10 @@ export const priorityList = [
   { ParameterCode: '3', ParameterName: 'Yüksek' },
 ];
 
+export const formatDate = (value: string) => {
+  if (!value || value.length !== 8) return '';
+  const year = value.substr(0, 4);
+  const month = value.substr(4, 2);
+  const day = value.substr(6, 2);
+  return `${day}.${month}.${year}`; // GG.AA.YYYY formatı
+};
