@@ -17,7 +17,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import projectManagementAndCRMCore from '../core';
 import { UserResponse } from '../core/Models/UserInterfaces';
 
-export default function UsersScreen({ navigation }: any) {
+export default function UsersScreen() {
   const { theme } = useTheme();
   const isDarkMode = theme.background === '#121212';
 
@@ -36,7 +36,7 @@ export default function UsersScreen({ navigation }: any) {
 
         const usersWithAvatars = await Promise.all(
           userResponse.map(async (user: UserResponse) => {
-            let avatar: string | undefined = undefined;
+            let avatar = null;
             if (user.ProfileImageUrl) {
               try {
                 const profileFile =

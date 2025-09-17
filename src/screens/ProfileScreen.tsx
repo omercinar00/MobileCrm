@@ -65,7 +65,7 @@ export default function ProfileScreen() {
             setProfileImg(`data:image/jpeg;base64,${profileFile.Base64String}`);
           }
         }
-      } catch (e) {
+      } catch (e: any) {
         Alert.alert('Hata', e);
       } finally {
         setLoading(false);
@@ -75,34 +75,64 @@ export default function ProfileScreen() {
   }, []);
 
   const onUpdateUserInfo = async () => {
-    if (!name || !surname || !birthDate || !gsm || !email) {
-      Alert.alert('Hata', 'Lütfen tüm alanları doldurun.');
-      return;
-    }
-    if (newPassword && newPassword !== repeatPassword) {
-      Alert.alert('Hata', 'Yeni şifre ve tekrar şifre aynı olmalı!');
-      return;
-    }
     try {
       setLoading(true);
-      const updatedData = {
-        ...currentUserInfo,
-        Name: name,
-        SurName: surname,
-        BirthDay: birthDate,
-        Gsm: gsm,
-        Email: email,
-        Password: newPassword || currentUserInfo.Password,
-        ProfileImageUrl: profileImg || currentUserInfo.ProfileImageUrl,
-      };
-      await projectManagementAndCRMCore.services.authServices.updateUser(
-        updatedData,
-      );
-      Alert.alert('Başarılı', 'Profil bilgileri güncellendi');
-    } catch (e) {
-      Alert.alert('Hata', e);
-    } finally {
+
+      // --- Zorunlu alan kontrolleri ---
+      if (!name) {
+        Alert.alert('Hata', 'Ad alanı zorunludur!');
+        setLoading(false);
+        return;
+      }
+      if (!surname) {
+        Alert.alert('Hata', 'Soyad alanı zorunludur!');
+        setLoading(false);
+        return;
+      }
+      if (!birthDate) {
+        Alert.alert('Hata', 'Doğum tarihi zorunludur!');
+        setLoading(false);
+        return;
+      }
+      if (!gsm) {
+        Alert.alert('Hata', 'GSM alanı zorunludur!');
+        setLoading(false);
+        return;
+      }
+      if (!email) {
+        Alert.alert('Hata', 'E-posta alanı zorunludur!');
+        setLoading(false);
+        return;
+      }
+
+      if (currentUserInfo) {
+        if (newPassword && newPassword !== repeatPassword) {
+          Alert.alert('Hata', 'Yeni şifre ve şifre tekrarı aynı olmalı!');
+          setLoading(false);
+          return;
+        }
+
+        const updatedData = {
+          ...currentUserInfo,
+          Name: name,
+          SurName: surname,
+          BirthDay: birthDate,
+          Gsm: gsm,
+          Email: email,
+          Password: newPassword || currentUserInfo.Password,
+          ProfileImageUrl: profileImg || currentUserInfo.ProfileImageUrl,
+        };
+
+        await projectManagementAndCRMCore.services.authServices.updateUser(
+          updatedData,
+        );
+        Alert.alert('Başarılı', 'Profil bilgileri başarıyla güncellendi.');
+      }
+
       setLoading(false);
+    } catch (e: any) {
+      setLoading(false);
+      Alert.alert('Hata', e?.message || e);
     }
   };
 

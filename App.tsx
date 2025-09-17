@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigationState } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ThemeProvider } from './src/theme/ThemeContext';
 import projectManagementAndCRMCore from './src/core';
-import notifee, { AndroidImportance } from '@notifee/react-native';
-import messaging from '@react-native-firebase/messaging';
+import notifee from '@notifee/react-native';
 
 import screensConfig from './screensAppConfig.json';
-
 // Screens importları
 import SplashScreen from './src/screens/SplashScreen';
 import LoginScreen from './src/screens/LoginScreen';
@@ -22,6 +20,8 @@ import ErrorDetailScreen from './src/screens/ErrorDetailScreen';
 import RequestDetailScreen from './src/screens/RequestDetailScreen';
 import GeneralInfoScreen from './src/screens/GeneralInfoScreen';
 import UsersScreen from './src/screens/UsersScreen';
+import { initFCM } from './src/notifications/notifications';
+import { BackHandler, ToastAndroid } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 
@@ -45,39 +45,48 @@ export default function App() {
   // --- APP INIT ---
   useEffect(() => {
     const initApp = async () => {
-      // Kullanıcı kontrolü
       const user = await AsyncStorage.getItem('user');
       setInitialRoute(user ? 'Home' : 'Login');
 
-      // Notifee izin iste
-      await notifee.requestPermission();
-
-      // Android kanal oluştur
-      await notifee.createChannel({
-        id: 'default',
-        name: 'Default Channel',
-        importance: AndroidImportance.HIGH,
-      });
-
-      // FCM token al
-      const token = await messaging().getToken();
-      console.log('FCM Token:', token);
-      // Backend’e token kaydet
-
-      // Foreground FCM listener
-      messaging().onMessage(async remoteMessage => {
-        await notifee.displayNotification({
-          title: remoteMessage.notification?.title || 'Yeni Talep/Hata!',
-          body: remoteMessage.notification?.body || 'Yeni talep/hata geldi.',
-          android: { channelId: 'default', smallIcon: 'ic_launcher' },
-        });
-      });
+      // FCM başlat
+      await initFCM();
 
       setIsLoading(false);
     };
 
     initApp();
   }, []);
+
+  // --- BACK BUTTON HANDLER ---
+  useEffect(() => {
+    let backPressed = 0;
+
+    const backAction = () => {
+      // Navigation state al
+      const currentRouteIndex = useNavigationState?.index ?? 0;
+
+      // Eğer HomeScreen'deyse
+      if (currentRouteIndex === 0 && initialRoute === 'Home') {
+        if (backPressed === 0) {
+          backPressed++;
+          ToastAndroid.show('Çıkmak için tekrar basın', ToastAndroid.SHORT);
+          setTimeout(() => (backPressed = 0), 2000); // 2 saniye içinde tekrar basılırsa çıkış
+          return true; // uygulamayı hemen kapatma
+        }
+        BackHandler.exitApp(); // ikinci basışta kapat
+        return true;
+      }
+
+      return false; // normal navigasyon çalışsın
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction,
+    );
+
+    return () => backHandler.remove();
+  }, [initialRoute]);
 
   // --- FOREGROUND POLLING FOR NEW TASK/ERROR ---
   useEffect(() => {

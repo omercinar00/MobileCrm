@@ -8,7 +8,10 @@ import { name as appName } from './app.json';
 import messaging from '@react-native-firebase/messaging';
 import notifee, { AndroidImportance } from '@notifee/react-native';
 
-// --- Background FCM handler ---
+/**
+ * Background FCM handler
+ * Uygulama arka plandayken gelen bildirimleri yakalar ve gösterir
+ */
 messaging().setBackgroundMessageHandler(async remoteMessage => {
   console.log('Background FCM message received:', remoteMessage);
 
@@ -19,13 +22,16 @@ messaging().setBackgroundMessageHandler(async remoteMessage => {
     importance: AndroidImportance.HIGH,
   });
 
-  // Bildirim göster
+  // Bildirimi göster
   await notifee.displayNotification({
     title: remoteMessage.notification?.title || 'Yeni Talep/Hata!',
     body: remoteMessage.notification?.body || 'Yeni talep/hata geldi.',
-    android: { channelId, smallIcon: 'ic_launcher' },
+    android: {
+      channelId,
+      smallIcon: 'ic_launcher', // drawable içinde icon olmalı
+    },
   });
 });
 
-// App'i kaydet
+// Uygulamayı kaydet
 AppRegistry.registerComponent(appName, () => App);
