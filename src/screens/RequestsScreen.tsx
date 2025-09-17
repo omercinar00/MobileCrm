@@ -19,9 +19,17 @@ import {
 } from '../utils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { TaskAndErrorListByCriteriaRequest } from '../core/Models/TaskInterfaces';
+import {
+  CompanyListResponse,
+  GetGeneralParameterListResponse,
+  GetProjectListResponse,
+  ModuleResponse,
+} from '../core/Models/ParameterInterfaces';
+import { UserResponse } from '../core/Models/UserInterfaces';
+import { GeneralParameters } from '../constants/parameters';
 
 // Sabit listeler
-const priorityList = [
+const priorityList2 = [
   { ParameterCode: '1', ParameterName: 'Düşük' },
   { ParameterCode: '2', ParameterName: 'Normal' },
   { ParameterCode: '3', ParameterName: 'Yüksek' },
@@ -40,6 +48,22 @@ export default function RequestsScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
+
+  const [priorityList, setPriorityList] = useState<
+    GetGeneralParameterListResponse[] | null
+  >(null);
+  const [requestStatusList, setRequestStatusList] = useState<
+    GetGeneralParameterListResponse[] | null
+  >(null);
+  const [projectList, setProjectList] = useState<
+    GetProjectListResponse[] | null
+  >(null);
+  const [institutionList, setInstitutionList] = useState<
+    CompanyListResponse[] | null
+  >(null);
+  const [allModuleList, setAllModuleList] = useState<ModuleResponse[] | null>(
+    null,
+  );
   const [userList, setUserList] = useState<any[]>([]);
 
   // Filtre state
@@ -54,9 +78,22 @@ export default function RequestsScreen({ navigation }: any) {
   const fetchData = async () => {
     try {
       setLoading(true);
-      setUserList(
-        await projectManagementAndCRMCore.services.authServices.getUserList(),
-      );
+      const requestStatus =
+        await projectManagementAndCRMCore.services.parameterServices.getGeneralParameterList(
+          GeneralParameters.REQUEST_STATUS,
+        );
+      const priority =
+        await projectManagementAndCRMCore.services.parameterServices.getGeneralParameterList(
+          GeneralParameters.PRIORITY,
+        );
+      const companyList =
+        await projectManagementAndCRMCore.services.parameterServices.getCompanyList();
+      const projects =
+        await projectManagementAndCRMCore.services.parameterServices.getProjectList();
+      const users =
+        await projectManagementAndCRMCore.services.authServices.getUserList();
+      const allModules =
+        await projectManagementAndCRMCore.services.parameterServices.getAllModuleList();
       const queryRequest: TaskAndErrorListByCriteriaRequest = {};
       const storedUserDetail = await AsyncStorage.getItem('userDetail');
       if (storedUserDetail) {
@@ -69,6 +106,14 @@ export default function RequestsScreen({ navigation }: any) {
         list = list.sort((a: any, b: any) => b.No - a.No);
         setData(list);
         setFilteredData(list);
+
+        // State olarak set et
+        setPriorityList(priority);
+        setRequestStatusList(requestStatus);
+        setInstitutionList(companyList);
+        setProjectList(projects);
+        setUserList(users);
+        setAllModuleList(allModules);
       }
     } catch (error) {
       Alert.alert('Hata', (error as string) || 'Veri çekilemedi');
@@ -103,6 +148,14 @@ export default function RequestsScreen({ navigation }: any) {
     try {
       let detailData: any;
       let screenName: string = '';
+      let allPageServices: any = {
+        priorityList: priorityList,
+        errorStatus: requestStatusList,
+        projectList: projectList,
+        institutionList: institutionList,
+        moduleList: allModuleList,
+        userList: userList,
+      };
 
       if (rowData.Type === '2') {
         // TASK
@@ -112,17 +165,6 @@ export default function RequestsScreen({ navigation }: any) {
           );
         console.log('🚀 ~ onDetailButtonClicked ~ detailData:', detailData);
         screenName = 'RequestDetail';
-
-        // setAllPageServices({
-        //   priorityList: priorityListRef.current,
-        //   requestStatus: requestStatusRef.current,
-        //   projectList: projectListRef.current,
-        //   institutionList: institutionListRef.current,
-        //   moduleList: moduleListRef.current,
-        //   userList: userListRef.current,
-        // });
-
-        // setRequestOrErrorList(detailData);
       } else if (rowData.Type === '1') {
         // ERROR
         detailData =
@@ -131,21 +173,21 @@ export default function RequestsScreen({ navigation }: any) {
           );
         console.log('🚀 ~ onDetailButtonClicked ~ detailData:', detailData);
         screenName = 'ErrorDetail';
-
-        // setAllPageServices({
-        //   priorityList: priorityListRef.current,
-        //   errorStatus: requestStatusRef.current,
-        //   projectList: projectListRef.current,
-        //   institutionList: institutionListRef.current,
-        //   moduleList: moduleListRef.current,
-        //   userList: userListRef.current,
-        // });
-
-        // setRequestOrErrorList(detailData);
       }
 
       // Navigation
-      navigation.navigate(screenName, { item: detailData });
+      console.log(
+        '🚀 ~ onDetailButtonClicked ~ onDetailButtonClicked.detailData:',
+        detailData,
+      );
+      console.log(
+        '🚀 ~ onDetailButtonClicked ~ onDetailButtonClicked.allPageServices:',
+        allPageServices,
+      );
+      navigation.navigate(screenName, {
+        detailData: detailData,
+        allPageServices: allPageServices,
+      });
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -184,7 +226,7 @@ export default function RequestsScreen({ navigation }: any) {
         }}
       >
         <Text style={{ color: '#fff' }}>
-          {convertPriorityCodeToName(item.Priority, priorityList)}
+          {convertPriorityCodeToName(item.Priority, priorityList2)}
         </Text>
       </View>
     </TouchableOpacity>
@@ -221,7 +263,7 @@ export default function RequestsScreen({ navigation }: any) {
         filterPriority={filterPriority}
         setFilterPriority={setFilterPriority}
         applyFilters={applyFilters}
-        priorityList={priorityList}
+        priorityList={priorityList2}
         statusList={statusList}
       />
     </View>

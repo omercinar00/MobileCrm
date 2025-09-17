@@ -90,7 +90,7 @@ export default function LoginScreen({ navigation }: any) {
 
       <TextInput
         placeholder="Kullanıcı Adı"
-        placeholderTextColor={theme.text + '99'}
+        placeholderTextColor={theme.placeholder} // ← burayı
         value={username}
         onChangeText={setUsername}
         style={[
@@ -102,7 +102,7 @@ export default function LoginScreen({ navigation }: any) {
 
       <TextInput
         placeholder="Şifre"
-        placeholderTextColor={theme.text + '99'}
+        placeholderTextColor={theme.placeholder} // ← burayı
         value={password}
         onChangeText={setPassword}
         style={[

@@ -4,6 +4,7 @@ import { useColorScheme } from 'react-native';
 export type Theme = {
   background: string;
   text: string;
+  placeholder: string;
   primary: string;
   cardBackground: string;
   inputBackground: string;
@@ -13,7 +14,8 @@ export type Theme = {
 
 const lightTheme: Theme = {
   background: '#f8f8f8',
-  text: '#333',
+  text: '#000',
+  placeholder: '#555',
   primary: '#1e90ff',
   cardBackground: '#ffffff',
   inputBackground: '#f0f0f0',
@@ -24,6 +26,7 @@ const lightTheme: Theme = {
 const darkTheme: Theme = {
   background: '#121212',
   text: '#fff',
+  placeholder: '#555',
   primary: '#1e90ff',
   cardBackground: '#1e1e1e',
   inputBackground: '#2a2a2a',

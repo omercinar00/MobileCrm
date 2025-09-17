@@ -192,7 +192,7 @@ export default function UsersScreen() {
         <TextInput
           style={[styles.searchInput, { color: isDarkMode ? '#FFF' : '#000' }]}
           placeholder="İsim veya numara ara"
-          placeholderTextColor={isDarkMode ? '#888' : '#999'}
+          placeholderTextColor={theme.placeholder}
           value={searchText}
           onChangeText={handleSearch}
         />

@@ -20,6 +20,7 @@ export default function HomeScreen({ navigation }: any) {
   const { theme } = useTheme();
   const [userDetail, setUserDetail] = useState<any>(null);
   const [userName, setUserName] = useState<string>('');
+  const [title, setTitle] = useState<string | null>('');
   const [profileImageUri, setProfileImageUri] = useState<string>('');
   const [loadingImage, setLoadingImage] = useState(true);
   const [rememberMe, setRememberMe] = useState(false);
@@ -56,6 +57,14 @@ export default function HomeScreen({ navigation }: any) {
             );
           }
         }
+        const titles =
+          await projectManagementAndCRMCore.services.parameterServices.getTitleList();
+        setTitle(
+          parsedUser && titles.length
+            ? titles.find(t => t?.TitleCode === parsedUser.TitleCode)
+                ?.TitleName || 'Unvan yok'
+            : 'Unvan yok',
+        );
       } catch (error) {
         console.log('❌ loadUser error:', error);
       } finally {
@@ -125,11 +134,7 @@ export default function HomeScreen({ navigation }: any) {
           />
           <TextInput
             placeholder="Menülerde ara..."
-            placeholderTextColor={
-              theme.text === '#fff'
-                ? 'rgba(255,255,255,0.6)'
-                : 'rgba(0,0,0,0.6)'
-            }
+            placeholderTextColor={theme.placeholder} // ← burayı
             value={searchText}
             onChangeText={setSearchText}
             style={[styles.searchInput, { color: theme.text }]}
@@ -222,6 +227,7 @@ export default function HomeScreen({ navigation }: any) {
       {/* Kullanıcı Bilgisi */}
       <View style={styles.userInfo}>
         <Text style={[styles.userName, { color: theme.text }]}>{userName}</Text>
+        <Text style={[styles.userTitle, { color: theme.text }]}>{title}</Text>
       </View>
 
       {/* Ana Menü */}
@@ -330,6 +336,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   userName: { fontSize: 18, fontWeight: '600' },
+  userTitle: { fontSize: 14, fontWeight: '600' },
   footer: {
     position: 'absolute',
     bottom: 0,

@@ -47,13 +47,13 @@ export function getPriorityColor(
 
   switch (priorityCode) {
     case '1': // Çok Yüksek
-    return '#73D13D';
+      return '#73D13D';
     case '2': // Yüksek
-    return '#FFEC3D';
+      return '#FFEC3D';
     case '3': // Orta
-    return '#FFA940';
+      return '#FFA940';
     case '4': // Düşük
-    return '#FF4D4F';
+      return '#FF4D4F';
     default:
       return '#E0E0E0'; // bilinmeyen veya boş
   }
@@ -83,4 +83,75 @@ export function convertUserOidToName(userOid: number, userList: any) {
   } else {
     return 'Bulunamadı';
   }
+}
+
+export function convertInstitutionOidToName(
+  institutionOid: number,
+  institutionList: any,
+) {
+  let institutionName = 'Bulunamadı';
+  if (institutionList && institutionList.length > 0) {
+    const projectInfo = institutionList.find(
+      (item: any) => item.Oid === institutionOid,
+    );
+    if (projectInfo) return (institutionName = projectInfo.CompanyName);
+    else return institutionName;
+  } else {
+    return 'Bulunamadı';
+  }
+}
+
+export function convertProjectOidToName(projectOid: number, projectList: any) {
+  let projectName = '';
+  if (projectList) {
+    const projectInfo = projectList.find(
+      (item: any) => item.Oid === projectOid,
+    );
+    if (projectInfo) return (projectName = projectInfo.ProjectName);
+    else return projectName;
+  } else {
+    return '';
+  }
+}
+
+export function convertModuleOidToName(moduleOid: number, moduleList: any) {
+  let moduleName = 'Bulunamadı';
+  if (moduleList && moduleList.length > 0) {
+    const projectInfo = moduleList.find((item: any) => item.Oid === moduleOid);
+    if (projectInfo) return (moduleName = projectInfo.ModuleName);
+    else return moduleName;
+  } else {
+    return 'Bulunamadı';
+  }
+}
+
+export function formatDate2(date: number) {
+  const dateString = date.toString();
+  if (!dateString || dateString.length !== 14) return dateString;
+
+  const year = dateString.slice(0, 4);
+  const month = dateString.slice(4, 6);
+  const day = dateString.slice(6, 8);
+  const hour = dateString.slice(8, 10);
+  const minute = dateString.slice(10, 12);
+  const second = dateString.slice(12, 14);
+
+  const monthNames = [
+    'Ocak',
+    'Şubat',
+    'Mart',
+    'Nisan',
+    'Mayıs',
+    'Haziran',
+    'Temmuz',
+    'Ağustos',
+    'Eylül',
+    'Ekim',
+    'Kasım',
+    'Aralık',
+  ];
+
+  const monthName = monthNames[parseInt(month, 10) - 1];
+
+  return `${day} ${monthName} ${year}, ${hour}:${minute}`;
 }

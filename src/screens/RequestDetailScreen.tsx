@@ -1,28 +1,37 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  Dimensions,
+  TouchableOpacity,
+  Linking,
+  useWindowDimensions,
+} from 'react-native';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import { Button, Avatar } from 'react-native-paper';
 import { KeyboardAwareFlatList } from 'react-native-keyboard-aware-scroll-view';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTheme } from '../theme/ThemeContext';
-
+import {
+  convertInstitutionOidToName,
+  convertModuleOidToName,
+  convertPriorityCodeToName,
+  convertProjectOidToName,
+  convertTaskStatusCodeToName,
+  convertUserOidToName,
+  formatDate2,
+} from '../utils';
+import RenderHTML from 'react-native-render-html';
 interface RequestDetailScreenProps {
-  openDialog: boolean;
-  setOpenDialog: (open: boolean) => void;
-  taskList?: any;
-  item?: any;
-  taskNoteList?: any[];
-  uploadedDocumentList?: any[];
-  taskHistoryList?: any[];
   navigation?: any;
+  route?: any;
 }
 
-function RequestDetailScreen({
-  taskList,
-  taskNoteList = [],
-  uploadedDocumentList = [],
-  taskHistoryList = [],
-  navigation,
-}: RequestDetailScreenProps) {
+function RequestDetailScreen({ navigation, route }: RequestDetailScreenProps) {
+  const { detailData = {}, allPageServices = {} } = route?.params || {};
   const { theme } = useTheme();
   const [index, setIndex] = useState(0);
   const [routes] = useState([
@@ -30,43 +39,145 @@ function RequestDetailScreen({
     { key: 'history', title: 'Talep Geçmişi' },
     { key: 'documents', title: 'Dökümanlar' },
   ]);
-
   const screenWidth = Dimensions.get('window').width;
   const [commentText, setCommentText] = useState('');
 
+  // Array veriler
+  const comments = detailData || [];
+  const history = (detailData?.TaskDetailList || []).slice().reverse();
+  const documents = detailData?.TaskDocumentList || [];
+  console.log('🚀 ~ RequestDetailScreen ~ detailData:', detailData);
+
+  // Talep bilgileri için iki sütunlu yapı
+  const infoItems = [
+    {
+      icon: 'arrow-forward',
+      label: 'Talebin Sahibi',
+      value: convertUserOidToName(
+        detailData?.CreatedUserOid,
+        allPageServices.userList,
+      ),
+    },
+    {
+      icon: 'home',
+      label: 'Kurum',
+      value: convertInstitutionOidToName(
+        detailData?.CompanyOid,
+        allPageServices.institutionList,
+      ),
+    },
+    {
+      icon: 'file-copy',
+      label: 'Proje',
+      value: convertProjectOidToName(
+        detailData?.ProjectOid,
+        allPageServices.projectList,
+      ),
+    },
+    {
+      icon: 'info',
+      label: 'Durumu',
+      value: convertTaskStatusCodeToName(
+        detailData?.TaskStatusCode,
+        allPageServices.requestStatus,
+      ),
+    },
+    {
+      icon: 'content-paste',
+      label: 'Öncelik',
+      value: convertPriorityCodeToName(
+        Number.parseInt(detailData?.Priority),
+        allPageServices.priorityList,
+      ),
+    },
+    {
+      icon: 'query-builder',
+      label: 'Th. Bitiş Tarihi',
+      value: detailData?.EndDate,
+    },
+    {
+      icon: 'web',
+      label: 'Modül / Sayfa',
+      value: convertModuleOidToName(
+        detailData?.ModuleOid,
+        allPageServices.moduleList,
+      ),
+    },
+    {
+      icon: 'person',
+      label: 'İletilen Personel',
+      value: convertUserOidToName(
+        detailData?.SendUserOid,
+        allPageServices.userList,
+      ),
+    },
+  ];
+
+  const getFileIcon = (extension: string) => {
+    switch (extension.toLowerCase()) {
+      case '.pdf':
+        return 'file-pdf';
+      case '.doc':
+      case '.docx':
+        return 'file-word';
+      case '.xls':
+      case '.xlsx':
+        return 'file-excel';
+      case '.png':
+      case '.jpg':
+      case '.jpeg':
+      case '.gif':
+        return 'file-image';
+      default:
+        return 'file';
+    }
+  };
+  const { width } = useWindowDimensions();
+
   const DetailsRoute = () => (
     <KeyboardAwareFlatList
-      data={taskNoteList}
-      keyExtractor={item => item.Oid.toString()}
+      data={comments}
+      keyExtractor={(item, index) => item?.Oid?.toString() || index.toString()}
       ListHeaderComponent={
         <View>
           <Text style={[styles.sectionTitle, { color: theme.primary }]}>
             Talep Bilgileri
           </Text>
-          <Text style={{ color: theme.text }}>{`Talep No: ${
-            taskList?.TaskNo || '-'
-          }`}</Text>
-          <Text style={{ color: theme.text }}>{`Talep Başlığı: ${
-            taskList?.TaskTitle || '-'
-          }`}</Text>
-          <Text style={{ color: theme.text }}>{`Talebin Sahibi: ${
-            taskList?.CreatedUserName || '-'
-          }`}</Text>
-          <Text style={{ color: theme.text }}>{`Kurum: ${
-            taskList?.CompanyName || '-'
-          }`}</Text>
+
+          {/* İki sütunlu talep bilgileri */}
+          <View style={styles.infoContainer}>
+            {infoItems.map((item, idx) => (
+              <View key={idx} style={styles.infoItem}>
+                <MaterialIcons
+                  name={item.icon as any}
+                  size={20}
+                  color="#2499E3"
+                />
+                <View style={{ marginLeft: 6 }}>
+                  <Text style={[styles.infoLabel, { color: theme.primary }]}>
+                    {item.label}
+                  </Text>
+                  <Text style={[styles.infoValue, { color: theme.text }]}>
+                    {item.value || '-'}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
 
           <Text style={[styles.sectionTitle, { color: theme.primary }]}>
             Talep Açıklaması
           </Text>
-          <TextInput
-            value={taskList?.TaskExplanation || ''}
-            editable={false}
-            multiline
-            style={[
-              styles.taskExplanation,
-              { backgroundColor: theme.cardBackground, color: theme.text },
-            ]}
+          <RenderHTML
+            contentWidth={width}
+            source={{ html: detailData?.TaskExplanation || '<p>-</p>' }}
+            baseStyle={{
+              color: theme.text,
+              backgroundColor: theme.cardBackground,
+              padding: 10,
+              borderRadius: 5,
+              minHeight: 100,
+            }}
           />
 
           <Text style={[styles.sectionTitle, { color: theme.primary }]}>
@@ -97,7 +208,7 @@ function RequestDetailScreen({
         <View style={{ padding: 10 }}>
           <TextInput
             placeholder="Yorum ekle..."
-            placeholderTextColor={theme.text + '88'}
+            placeholderTextColor={theme.placeholder}
             value={commentText}
             onChangeText={setCommentText}
             style={[
@@ -124,24 +235,47 @@ function RequestDetailScreen({
 
   const HistoryRoute = () => (
     <KeyboardAwareFlatList
-      data={taskHistoryList}
-      keyExtractor={(_, index) => index.toString()}
-      renderItem={({ item }) => (
-        <View
-          style={[
-            styles.historyItem,
-            { backgroundColor: theme.cardBackground },
-          ]}
-        >
-          <Text style={[styles.historyText, { color: theme.text }]}>
-            {item.date}
-          </Text>
-          <Text style={[styles.historyText, { color: theme.text }]}>
-            {item.action}
-          </Text>
-          <Text style={[styles.historyText, { color: theme.text }]}>
-            {item.user}
-          </Text>
+      data={history}
+      keyExtractor={(item, index) => item?.Oid?.toString() || index.toString()}
+      renderItem={({ item, index }) => (
+        <View style={{ flexDirection: 'row', marginVertical: 10 }}>
+          {/* Timeline çizgisi ve nokta */}
+          <View style={{ alignItems: 'center', width: 40 }}>
+            <View
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: 5,
+                backgroundColor: theme.primary,
+              }}
+            />
+            {index !== history.length - 1 && (
+              <View
+                style={{
+                  width: 2,
+                  flex: 1,
+                  backgroundColor: theme.primary,
+                  marginTop: 2,
+                }}
+              />
+            )}
+          </View>
+
+          {/* İçerik */}
+          <View style={{ flex: 1, paddingLeft: 10 }}>
+            <Text style={{ color: theme.text, fontStyle: 'italic' }}>
+              {convertUserOidToName(
+                item.CreatedUserOid,
+                allPageServices.userList,
+              )}{' '}
+              &gt;&gt;{' '}
+              {convertUserOidToName(item.SendUserOid, allPageServices.userList)}
+            </Text>
+            <Text style={{ color: theme.text }}>{item.Description}</Text>
+            <Text style={{ color: theme.primary, fontWeight: '600' }}>
+              {formatDate2(item.CreatedDate)}
+            </Text>
+          </View>
         </View>
       )}
       ListEmptyComponent={
@@ -153,15 +287,43 @@ function RequestDetailScreen({
 
   const DocumentsRoute = () => (
     <KeyboardAwareFlatList
-      data={uploadedDocumentList}
-      keyExtractor={(_, index) => index.toString()}
-      renderItem={({ item }) => (
-        <View
-          style={[styles.docItem, { backgroundColor: theme.cardBackground }]}
-        >
-          <Text style={{ color: theme.text }}>{item.fileName}</Text>
-        </View>
-      )}
+      data={documents}
+      keyExtractor={(item, index) => item?.Oid?.toString() || index.toString()}
+      renderItem={({ item }) => {
+        const ext = item.FileExtension;
+        return (
+          <TouchableOpacity
+            style={[
+              styles.docItem,
+              {
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: theme.cardBackground,
+              },
+            ]}
+            onPress={() => {
+              const fileUrl = `https://YOUR_SERVER_URL/${item.FileUrl.replace(
+                /\\/g,
+                '/',
+              )}`;
+              if (['.png', '.jpg', '.jpeg', '.gif'].includes(ext || '')) {
+                navigation.navigate('ImagePreview', { uri: fileUrl });
+              } else {
+                Linking.openURL(fileUrl);
+              }
+            }}
+          >
+            <MaterialCommunityIcons
+              name={getFileIcon(ext)}
+              size={24}
+              color={theme.primary}
+            />
+            <Text style={{ color: theme.text, marginLeft: 10 }}>
+              {item.FileDisplayname || item.OriginalFilename}
+            </Text>
+          </TouchableOpacity>
+        );
+      }}
       ListEmptyComponent={
         <Text style={{ color: theme.text }}>Henüz döküman yok</Text>
       }
@@ -242,6 +404,20 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginVertical: 5,
   },
+  infoContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginVertical: 5,
+  },
+  infoItem: {
+    width: '48%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 4,
+  },
+  infoLabel: { fontWeight: '600' },
+  infoValue: {},
 });
 
 export default RequestDetailScreen;

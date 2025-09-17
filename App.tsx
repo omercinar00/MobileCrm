@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { NavigationContainer, useNavigationState } from '@react-navigation/native';
+import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { ThemeProvider } from './src/theme/ThemeContext';
+import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import projectManagementAndCRMCore from './src/core';
 import notifee from '@notifee/react-native';
+import { BackHandler, ToastAndroid } from 'react-native';
 
 import screensConfig from './screensAppConfig.json';
 // Screens importları
@@ -21,7 +22,6 @@ import RequestDetailScreen from './src/screens/RequestDetailScreen';
 import GeneralInfoScreen from './src/screens/GeneralInfoScreen';
 import UsersScreen from './src/screens/UsersScreen';
 import { initFCM } from './src/notifications/notifications';
-import { BackHandler, ToastAndroid } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 
@@ -39,8 +39,19 @@ const componentMap: Record<string, any> = {
 };
 
 export default function App() {
+  return (
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+    </SafeAreaProvider>
+  );
+}
+
+function AppContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [initialRoute, setInitialRoute] = useState<'Login' | 'Home'>('Login');
+  const { theme } = useTheme();
 
   // --- APP INIT ---
   useEffect(() => {
@@ -53,7 +64,6 @@ export default function App() {
 
       setIsLoading(false);
     };
-
     initApp();
   }, []);
 
@@ -62,22 +72,18 @@ export default function App() {
     let backPressed = 0;
 
     const backAction = () => {
-      // Navigation state al
-      const currentRouteIndex = useNavigationState?.index ?? 0;
-
-      // Eğer HomeScreen'deyse
+      const currentRouteIndex = 0; // En üst stack index
       if (currentRouteIndex === 0 && initialRoute === 'Home') {
         if (backPressed === 0) {
           backPressed++;
           ToastAndroid.show('Çıkmak için tekrar basın', ToastAndroid.SHORT);
-          setTimeout(() => (backPressed = 0), 2000); // 2 saniye içinde tekrar basılırsa çıkış
-          return true; // uygulamayı hemen kapatma
+          setTimeout(() => (backPressed = 0), 2000);
+          return true;
         }
-        BackHandler.exitApp(); // ikinci basışta kapat
+        BackHandler.exitApp();
         return true;
       }
-
-      return false; // normal navigasyon çalışsın
+      return false;
     };
 
     const backHandler = BackHandler.addEventListener(
@@ -100,7 +106,6 @@ export default function App() {
         const parsedDetail = JSON.parse(storedUserDetail);
         const queryRequest: any = { UserOid: parsedDetail.Oid };
 
-        // İlk fetch
         if (previousCount === 0) {
           const initialList =
             await projectManagementAndCRMCore.services.taskAndErrorService.getUserTaskAndErrorListByCriteria(
@@ -117,7 +122,6 @@ export default function App() {
         if (previousCount != null && list.length > previousCount) {
           const newCount = list.length - previousCount;
 
-          // Foreground bildirimi
           await notifee.displayNotification({
             title: 'Yeni Talep/Hata!',
             body: `${newCount} yeni talep veya hata eklendi.`,
@@ -131,40 +135,34 @@ export default function App() {
       }
     };
 
-    interval = setInterval(startPolling, 10000); // 10 saniyede bir kontrol
-
+    interval = setInterval(startPolling, 10000); // 10 saniyede bir
     return () => clearInterval(interval);
   }, []);
 
   // --- RENDER ---
-  if (isLoading)
-    return (
-      <SafeAreaProvider>
-        <ThemeProvider>
-          <SplashScreen onFinish={() => setIsLoading(false)} />
-        </ThemeProvider>
-      </SafeAreaProvider>
-    );
+  if (isLoading) return <SplashScreen onFinish={() => setIsLoading(false)} />;
 
   return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <NavigationContainer>
-          <Stack.Navigator initialRouteName={initialRoute}>
-            {screensConfig.map(screen => (
-              <Stack.Screen
-                key={screen.name}
-                name={screen.name}
-                component={componentMap[screen.component]}
-                options={{
-                  headerShown: screen.headerShown,
-                  headerTitle: screen.headerTitle || screen.name,
-                }}
-              />
-            ))}
-          </Stack.Navigator>
-        </NavigationContainer>
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <NavigationContainer>
+      <Stack.Navigator
+        initialRouteName={initialRoute}
+        screenOptions={{
+          headerStyle: { backgroundColor: theme.background },
+          headerTintColor: theme.text,
+        }}
+      >
+        {screensConfig.map(screen => (
+          <Stack.Screen
+            key={screen.name}
+            name={screen.name}
+            component={componentMap[screen.component]}
+            options={{
+              headerShown: screen.headerShown,
+              headerTitle: screen.headerTitle || screen.name,
+            }}
+          />
+        ))}
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }

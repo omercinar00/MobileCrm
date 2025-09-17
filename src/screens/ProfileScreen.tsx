@@ -14,6 +14,10 @@ import { useTheme } from '../theme/ThemeContext';
 import projectManagementAndCRMCore from '../core';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { formatDate } from '../utils';
+import { launchImageLibrary } from 'react-native-image-picker';
+import { UpdateUserRequest } from '../core/Models/UserInterfaces';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
   const { theme } = useTheme();
@@ -30,6 +34,7 @@ export default function ProfileScreen() {
   const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
+  const [uploadedDocument, setUploadedDocument] = useState<any>(null);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -45,6 +50,7 @@ export default function ProfileScreen() {
           await projectManagementAndCRMCore.services.authServices.getUserInfoByUserOid(
             parsedUser?.Oid,
           );
+
         if (userData && userData.length > 0) {
           const currentUser = userData[0];
           setCurrentUserInfo(currentUser);
@@ -66,7 +72,7 @@ export default function ProfileScreen() {
           }
         }
       } catch (e: any) {
-        Alert.alert('Hata', e);
+        Alert.alert('Hata', e?.message || e);
       } finally {
         setLoading(false);
       }
@@ -74,75 +80,92 @@ export default function ProfileScreen() {
     loadUser();
   }, []);
 
-  const onUpdateUserInfo = async () => {
-    try {
-      setLoading(true);
-
-      // --- Zorunlu alan kontrolleri ---
-      if (!name) {
-        Alert.alert('Hata', 'Ad alanı zorunludur!');
-        setLoading(false);
-        return;
-      }
-      if (!surname) {
-        Alert.alert('Hata', 'Soyad alanı zorunludur!');
-        setLoading(false);
-        return;
-      }
-      if (!birthDate) {
-        Alert.alert('Hata', 'Doğum tarihi zorunludur!');
-        setLoading(false);
-        return;
-      }
-      if (!gsm) {
-        Alert.alert('Hata', 'GSM alanı zorunludur!');
-        setLoading(false);
-        return;
-      }
-      if (!email) {
-        Alert.alert('Hata', 'E-posta alanı zorunludur!');
-        setLoading(false);
-        return;
-      }
-
-      if (currentUserInfo) {
-        if (newPassword && newPassword !== repeatPassword) {
-          Alert.alert('Hata', 'Yeni şifre ve şifre tekrarı aynı olmalı!');
+  const handleChangeImageFile = () => {
+    setLoading(true);
+    launchImageLibrary(
+      { mediaType: 'photo', maxWidth: 500, maxHeight: 500, quality: 0.8 },
+      async response => {
+        if (response.didCancel) {
           setLoading(false);
           return;
         }
+        if (response.errorCode) {
+          setLoading(false);
+          Alert.alert('Hata', response.errorMessage || 'Resim seçilemedi');
+          return;
+        }
+        if (response.assets && response.assets.length > 0) {
+          const file = response.assets[0];
+          setProfileImg(file.uri);
+          setUploadedDocument({
+            name: file.fileName,
+            type: file.type,
+            uri: file.uri,
+          });
+          setLoading(false);
+        }
+      },
+    );
+  };
 
-        const updatedData = {
-          ...currentUserInfo,
-          Name: name,
-          SurName: surname,
-          BirthDay: birthDate,
-          Gsm: gsm,
-          Email: email,
-          Password: newPassword || currentUserInfo.Password,
-          ProfileImageUrl: profileImg || currentUserInfo.ProfileImageUrl,
-        };
+  const onUpdateUserInfo = async () => {
+    try {
+      // Zorunlu alan kontrolleri
+      if (!name) return Alert.alert('Hata', 'Ad alanı zorunludur!');
+      if (!surname) return Alert.alert('Hata', 'Soyad alanı zorunludur!');
+      if (!birthDate) return Alert.alert('Hata', 'Doğum tarihi zorunludur!');
+      if (!gsm) return Alert.alert('Hata', 'GSM alanı zorunludur!');
+      if (!email) return Alert.alert('Hata', 'E-posta alanı zorunludur!');
+      if (newPassword && newPassword !== repeatPassword)
+        return Alert.alert('Hata', 'Yeni şifre ve şifre tekrarı aynı olmalı!');
 
-        await projectManagementAndCRMCore.services.authServices.updateUser(
-          updatedData,
-        );
-        Alert.alert('Başarılı', 'Profil bilgileri başarıyla güncellendi.');
+      setLoading(true);
+
+      // Dosya yükleme
+      if (uploadedDocument) {
+        await projectManagementAndCRMCore.services.fileService.uploadFile({
+          UserName: currentUserInfo.UserName,
+          Request: uploadedDocument,
+        });
       }
 
-      setLoading(false);
+      const updatedData: UpdateUserRequest = {
+        ...currentUserInfo,
+        Name: name,
+        SurName: surname,
+        BirthDay: birthDate,
+        Gsm: gsm,
+        Email: email,
+        Password: newPassword || currentUserInfo.Password,
+        ProfileImageUrl:
+          uploadedDocument?.uri || currentUserInfo.ProfileImageUrl,
+      };
+
+      await projectManagementAndCRMCore.services.authServices.updateUser(
+        updatedData,
+      );
+      Alert.alert('Başarılı', 'Profil bilgileri başarıyla güncellendi.');
     } catch (e: any) {
-      setLoading(false);
       Alert.alert('Hata', e?.message || e);
+    } finally {
+      setLoading(false);
     }
   };
 
+  // YÜKLENİYOR ekranı
   if (loading) {
     return (
-      <View
-        style={[styles.loaderContainer, { backgroundColor: theme.background }]}
+      <SafeAreaView
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: theme.background,
+        }}
       >
         <ActivityIndicator size="large" color={theme.primary} />
-      </View>
+        <Text style={{ marginTop: 10, color: theme.text }}>Yükleniyor...</Text>
+      </SafeAreaView>
     );
   }
 
@@ -152,73 +175,87 @@ export default function ProfileScreen() {
       contentContainerStyle={styles.container}
     >
       <View style={styles.imageContainer}>
-        <Image
-          source={
-            profileImg ? { uri: profileImg } : require('../assets/applogo.png')
-          }
-          style={styles.profileImage}
-        />
+        <Pressable onPress={handleChangeImageFile}>
+          <Image
+            source={
+              profileImg
+                ? { uri: profileImg }
+                : require('../assets/applogo.png')
+            }
+            style={[styles.profileImage, { borderColor: theme.primary }]}
+          />
+          <View
+            style={[
+              styles.editIconContainer,
+              { backgroundColor: theme.background + '80' },
+            ]}
+          >
+            <MaterialIcons name="edit" size={24} color={theme.text} />
+          </View>
+        </Pressable>
       </View>
 
       <View style={styles.formContainer}>
-        <TextInput
-          style={[styles.input, { color: theme.text }]}
-          placeholder="Adı"
-          value={name}
-          onChangeText={setName}
-        />
-        <TextInput
-          style={[styles.input, { color: theme.text }]}
-          placeholder="Soyadı"
-          value={surname}
-          onChangeText={setSurname}
-        />
-        <TextInput
-          style={[styles.input, { color: theme.text }]}
-          placeholder="Doğum Tarihi"
-          value={birthDate}
-          onChangeText={setBirthDate}
-        />
-        <TextInput
-          style={[styles.input, { color: theme.text }]}
-          placeholder="Ünvan"
-          value={title}
-          editable={false}
-        />
-        <TextInput
-          style={[styles.input, { color: theme.text }]}
-          placeholder="Gsm"
-          value={gsm}
-          onChangeText={setGsm}
-          keyboardType="phone-pad"
-        />
-        <TextInput
-          style={[styles.input, { color: theme.text }]}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-        />
-        <TextInput
-          style={[styles.input, { color: theme.text }]}
-          placeholder="Yeni Şifre"
-          value={newPassword}
-          onChangeText={setNewPassword}
-          secureTextEntry
-        />
-        <TextInput
-          style={[styles.input, { color: theme.text }]}
-          placeholder="Şifre Tekrar"
-          value={repeatPassword}
-          onChangeText={setRepeatPassword}
-          secureTextEntry
-        />
+        {[
+          { placeholder: 'Adı', value: name, setter: setName },
+          { placeholder: 'Soyadı', value: surname, setter: setSurname },
+          {
+            placeholder: 'Doğum Tarihi',
+            value: birthDate,
+            setter: setBirthDate,
+          },
+          {
+            placeholder: 'Ünvan',
+            value: title,
+            setter: () => {},
+            editable: false,
+          },
+          {
+            placeholder: 'Gsm',
+            value: gsm,
+            setter: setGsm,
+            keyboardType: 'phone-pad',
+          },
+          {
+            placeholder: 'Email',
+            value: email,
+            setter: setEmail,
+            keyboardType: 'email-address',
+          },
+          {
+            placeholder: 'Yeni Şifre',
+            value: newPassword,
+            setter: setNewPassword,
+            secureTextEntry: true,
+          },
+          {
+            placeholder: 'Şifre Tekrar',
+            value: repeatPassword,
+            setter: setRepeatPassword,
+            secureTextEntry: true,
+          },
+        ].map((field, idx) => (
+          <TextInput
+            key={idx}
+            style={[
+              styles.input,
+              { color: theme.text, borderColor: theme.text },
+            ]}
+            placeholder={field.placeholder}
+            placeholderTextColor={theme.placeholder}
+            value={field.value}
+            onChangeText={field.setter}
+            editable={field.editable !== false}
+            keyboardType={field.keyboardType}
+            secureTextEntry={field.secureTextEntry}
+          />
+        ))}
 
         <Pressable
           onPress={onUpdateUserInfo}
           style={[styles.button, { backgroundColor: theme.primary }]}
         >
-          <Text style={styles.buttonText}>Güncelle</Text>
+          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Güncelle</Text>
         </Pressable>
       </View>
     </ScrollView>
@@ -234,12 +271,19 @@ const styles = StyleSheet.create({
     height: 130,
     borderRadius: 65,
     borderWidth: 1,
-    borderColor: '#ccc',
+  },
+  editIconContainer: {
+    position: 'absolute',
+    bottom: -5,
+    right: -5,
+    borderRadius: 20,
+    padding: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   formContainer: { gap: 15 },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
     borderRadius: 8,
     padding: 10,
     marginVertical: 5,
@@ -250,5 +294,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 10,
   },
-  buttonText: { color: '#fff', fontWeight: 'bold' },
 });
