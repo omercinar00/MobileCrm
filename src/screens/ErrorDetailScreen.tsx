@@ -12,7 +12,7 @@ import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import { Button, Avatar } from 'react-native-paper';
 import { KeyboardAwareFlatList } from 'react-native-keyboard-aware-scroll-view';
 
-interface TaskDetailDialogProps {
+interface ErrorDetailScreenProps {
   taskList?: any;
   taskNoteList?: any[];
   uploadedDocumentList?: any[];
@@ -20,7 +20,7 @@ interface TaskDetailDialogProps {
   navigation?: any;
 }
 
-const ErrorDetailScreen: React.FC<TaskDetailDialogProps> = ({
+const ErrorDetailScreen: React.FC<ErrorDetailScreenProps> = ({
   taskList,
   taskNoteList = [],
   uploadedDocumentList = [],

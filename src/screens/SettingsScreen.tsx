@@ -169,9 +169,6 @@ export default function SettingsScreen({ navigation }: any) {
         { backgroundColor: isDarkMode ? '#121212' : '#FFF' },
       ]}
     >
-      <Text style={[styles.title, { color: isDarkMode ? '#FFF' : '#000' }]}>
-        Ayarlar
-      </Text>
       <FlatList
         data={settingsData}
         keyExtractor={(item, index) => index.toString()}

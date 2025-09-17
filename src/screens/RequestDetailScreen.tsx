@@ -1,36 +1,29 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Dimensions,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, Text, StyleSheet, TextInput, Dimensions } from 'react-native';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import { Button, Avatar } from 'react-native-paper';
 import { KeyboardAwareFlatList } from 'react-native-keyboard-aware-scroll-view';
+import { useTheme } from '../theme/ThemeContext';
 
-interface TaskDetailDialogProps {
+interface RequestDetailScreenProps {
   openDialog: boolean;
   setOpenDialog: (open: boolean) => void;
   taskList?: any;
+  item?: any;
   taskNoteList?: any[];
   uploadedDocumentList?: any[];
   taskHistoryList?: any[];
   navigation?: any;
 }
 
-const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
-  openDialog,
-  setOpenDialog,
+function RequestDetailScreen({
   taskList,
   taskNoteList = [],
   uploadedDocumentList = [],
   taskHistoryList = [],
   navigation,
-}) => {
+}: RequestDetailScreenProps) {
+  const { theme } = useTheme();
   const [index, setIndex] = useState(0);
   const [routes] = useState([
     { key: 'details', title: 'Detaylar' },
@@ -46,49 +39,71 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
       data={taskNoteList}
       keyExtractor={item => item.Oid.toString()}
       ListHeaderComponent={
-        <>
-          <Text style={styles.sectionTitle}>Talep Bilgileri</Text>
-          <Text>{`Talep No: ${taskList?.TaskNo || '-'}`}</Text>
-          <Text>{`Talep Başlığı: ${taskList?.TaskTitle || '-'}`}</Text>
-          <Text>{`Talebin Sahibi: ${taskList?.CreatedUserName || '-'}`}</Text>
-          <Text>{`Kurum: ${taskList?.CompanyName || '-'}`}</Text>
+        <View>
+          <Text style={[styles.sectionTitle, { color: theme.primary }]}>
+            Talep Bilgileri
+          </Text>
+          <Text style={{ color: theme.text }}>{`Talep No: ${
+            taskList?.TaskNo || '-'
+          }`}</Text>
+          <Text style={{ color: theme.text }}>{`Talep Başlığı: ${
+            taskList?.TaskTitle || '-'
+          }`}</Text>
+          <Text style={{ color: theme.text }}>{`Talebin Sahibi: ${
+            taskList?.CreatedUserName || '-'
+          }`}</Text>
+          <Text style={{ color: theme.text }}>{`Kurum: ${
+            taskList?.CompanyName || '-'
+          }`}</Text>
 
-          <Text style={styles.sectionTitle}>Talep Açıklaması</Text>
+          <Text style={[styles.sectionTitle, { color: theme.primary }]}>
+            Talep Açıklaması
+          </Text>
           <TextInput
             value={taskList?.TaskExplanation || ''}
             editable={false}
             multiline
-            style={styles.taskExplanation}
+            style={[
+              styles.taskExplanation,
+              { backgroundColor: theme.cardBackground, color: theme.text },
+            ]}
           />
 
-          <Text style={styles.sectionTitle}>Yorumlar</Text>
-        </>
+          <Text style={[styles.sectionTitle, { color: theme.primary }]}>
+            Yorumlar
+          </Text>
+        </View>
       }
       renderItem={({ item }) => (
         <View style={styles.commentContainer}>
           <Avatar.Image size={35} source={{ uri: item.userAvatarUrl }} />
           <View style={{ marginLeft: 10, flex: 1 }}>
-            <Text style={styles.commentUser}>{item.userName}</Text>
-            <Text style={styles.commentDate}>{item.date}</Text>
-            <Text>{item.note}</Text>
+            <Text style={[styles.commentUser, { color: theme.primary }]}>
+              {item.userName}
+            </Text>
+            <Text style={[styles.commentDate, { color: theme.text }]}>
+              {item.date}
+            </Text>
+            <Text style={{ color: theme.text }}>{item.note}</Text>
           </View>
         </View>
       )}
       ListEmptyComponent={
-        <Text style={{ marginVertical: 10 }}>
+        <Text style={{ marginVertical: 10, color: theme.text }}>
           Bu Talep İçin Henüz Yorum Girilmedi!
         </Text>
       }
       ListFooterComponent={
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          keyboardVerticalOffset={80}
-        >
+        <View style={{ padding: 10 }}>
           <TextInput
             placeholder="Yorum ekle..."
+            placeholderTextColor={theme.text + '88'}
             value={commentText}
             onChangeText={setCommentText}
-            style={styles.addCommentInput}
+            style={[
+              styles.addCommentInput,
+              { backgroundColor: theme.inputBackground, color: theme.text },
+            ]}
           />
           <Button
             mode="contained"
@@ -96,11 +111,12 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
               console.log('Yorum eklendi:', commentText);
               setCommentText('');
             }}
-            style={{ marginTop: 5 }}
+            style={{ marginTop: 5, backgroundColor: theme.primary }}
+            textColor="#fff"
           >
             Ekle
           </Button>
-        </KeyboardAvoidingView>
+        </View>
       }
       contentContainerStyle={{ padding: 10, paddingBottom: 50 }}
     />
@@ -111,13 +127,26 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
       data={taskHistoryList}
       keyExtractor={(_, index) => index.toString()}
       renderItem={({ item }) => (
-        <View style={styles.historyItem}>
-          <Text style={styles.historyText}>{item.date}</Text>
-          <Text style={styles.historyText}>{item.action}</Text>
-          <Text style={styles.historyText}>{item.user}</Text>
+        <View
+          style={[
+            styles.historyItem,
+            { backgroundColor: theme.cardBackground },
+          ]}
+        >
+          <Text style={[styles.historyText, { color: theme.text }]}>
+            {item.date}
+          </Text>
+          <Text style={[styles.historyText, { color: theme.text }]}>
+            {item.action}
+          </Text>
+          <Text style={[styles.historyText, { color: theme.text }]}>
+            {item.user}
+          </Text>
         </View>
       )}
-      ListEmptyComponent={<Text>Henüz geçmiş kaydı yok</Text>}
+      ListEmptyComponent={
+        <Text style={{ color: theme.text }}>Henüz geçmiş kaydı yok</Text>
+      }
       contentContainerStyle={{ padding: 10 }}
     />
   );
@@ -127,11 +156,15 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
       data={uploadedDocumentList}
       keyExtractor={(_, index) => index.toString()}
       renderItem={({ item }) => (
-        <View style={styles.docItem}>
-          <Text>{item.fileName}</Text>
+        <View
+          style={[styles.docItem, { backgroundColor: theme.cardBackground }]}
+        >
+          <Text style={{ color: theme.text }}>{item.fileName}</Text>
         </View>
       )}
-      ListEmptyComponent={<Text>Henüz döküman yok</Text>}
+      ListEmptyComponent={
+        <Text style={{ color: theme.text }}>Henüz döküman yok</Text>
+      }
       contentContainerStyle={{ padding: 10 }}
     />
   );
@@ -143,7 +176,7 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
       <TabView
         navigationState={{ index, routes }}
         renderScene={renderScene}
@@ -152,27 +185,27 @@ const TaskDetailDialog: React.FC<TaskDetailDialogProps> = ({
         renderTabBar={props => (
           <TabBar
             {...props}
-            indicatorStyle={{ backgroundColor: '#fff', height: 3 }}
-            style={{ backgroundColor: '#2499E3' }}
-            labelStyle={{ fontWeight: '600' }}
+            indicatorStyle={{ backgroundColor: theme.primary, height: 3 }}
+            style={{ backgroundColor: theme.primary }}
+            labelStyle={{ fontWeight: '600', color: '#fff' }}
           />
         )}
       />
       <Button
         mode="outlined"
         onPress={() => navigation.goBack()}
-        style={{ margin: 10 }}
+        style={{ margin: 10, borderColor: theme.primary }}
+        textColor={theme.primary}
       >
         Kapat
       </Button>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   sectionTitle: {
     fontWeight: '600',
-    color: '#2499E3',
     marginTop: 15,
     marginBottom: 5,
     fontSize: 16,
@@ -183,30 +216,32 @@ const styles = StyleSheet.create({
     padding: 10,
     minHeight: 100,
     borderRadius: 5,
-    backgroundColor: '#f9f9f9',
   },
   commentContainer: { flexDirection: 'row', marginVertical: 8 },
-  commentUser: { fontWeight: 'bold', color: '#2499E3' },
-  commentDate: { fontSize: 12, color: '#aaa' },
+  commentUser: { fontWeight: 'bold' },
+  commentDate: { fontSize: 12 },
   addCommentInput: {
     borderWidth: 1,
     borderColor: '#ddd',
     padding: 8,
     borderRadius: 5,
     marginTop: 10,
-    backgroundColor: '#f9f9f9',
   },
   historyItem: {
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    borderRadius: 5,
+    marginVertical: 5,
   },
   historyText: { marginBottom: 2 },
   docItem: {
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    borderRadius: 5,
+    marginVertical: 5,
   },
 });
 
-export default TaskDetailDialog;
+export default RequestDetailScreen;

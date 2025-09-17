@@ -125,7 +125,11 @@ export default function HomeScreen({ navigation }: any) {
           />
           <TextInput
             placeholder="Menülerde ara..."
-            placeholderTextColor={theme.text + '99'}
+            placeholderTextColor={
+              theme.text === '#fff'
+                ? 'rgba(255,255,255,0.6)'
+                : 'rgba(0,0,0,0.6)'
+            }
             value={searchText}
             onChangeText={setSearchText}
             style={[styles.searchInput, { color: theme.text }]}

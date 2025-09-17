@@ -95,15 +95,68 @@ export default function RequestsScreen({ navigation }: any) {
     setFilterModalVisible(false);
   };
 
+  const onDetailButtonClicked = async (rowData: any) => {
+    console.log('🚀 ~ onDetailButtonClicked ~ rowData:', rowData);
+    if (!rowData) return;
+
+    setLoading(true);
+    try {
+      let detailData: any;
+      let screenName: string = '';
+
+      if (rowData.Type === '2') {
+        // TASK
+        detailData =
+          await projectManagementAndCRMCore.services.taskService.getTaskInfo(
+            rowData.Oid,
+          );
+        console.log('🚀 ~ onDetailButtonClicked ~ detailData:', detailData);
+        screenName = 'RequestDetail';
+
+        // setAllPageServices({
+        //   priorityList: priorityListRef.current,
+        //   requestStatus: requestStatusRef.current,
+        //   projectList: projectListRef.current,
+        //   institutionList: institutionListRef.current,
+        //   moduleList: moduleListRef.current,
+        //   userList: userListRef.current,
+        // });
+
+        // setRequestOrErrorList(detailData);
+      } else if (rowData.Type === '1') {
+        // ERROR
+        detailData =
+          await projectManagementAndCRMCore.services.errorService.getErrorInfo(
+            rowData.Oid,
+          );
+        console.log('🚀 ~ onDetailButtonClicked ~ detailData:', detailData);
+        screenName = 'ErrorDetail';
+
+        // setAllPageServices({
+        //   priorityList: priorityListRef.current,
+        //   errorStatus: requestStatusRef.current,
+        //   projectList: projectListRef.current,
+        //   institutionList: institutionListRef.current,
+        //   moduleList: moduleListRef.current,
+        //   userList: userListRef.current,
+        // });
+
+        // setRequestOrErrorList(detailData);
+      }
+
+      // Navigation
+      navigation.navigate(screenName, { item: detailData });
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      Alert.alert('Hata', (error as string) || 'Veri çekilemedi');
+    }
+  };
+
   const renderItem = ({ item }: any) => (
     <TouchableOpacity
       style={[styles.itemContainer, { backgroundColor: theme.cardBackground }]}
-      onPress={() =>
-        navigation.navigate(
-          item.Type === '1' ? 'ErrorDetail' : 'RequestDetail',
-          { item },
-        )
-      }
+      onPress={() => onDetailButtonClicked(item)}
     >
       <View style={{ flex: 1 }}>
         <Text style={[styles.title, { color: theme.text }]}>

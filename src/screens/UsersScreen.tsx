@@ -2,192 +2,238 @@ import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
-  Switch,
   StyleSheet,
   FlatList,
   TouchableOpacity,
   Alert,
+  Image,
+  Linking,
+  TextInput,
+  Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import packageJson from '../../package.json';
-import notifee, {
-  AuthorizationStatus,
-  AndroidImportance,
-} from '@notifee/react-native';
-
-interface SettingItemProps {
-  title: string;
-  description?: string;
-  icon: string;
-  type: 'switch' | 'button';
-  value?: boolean;
-  onToggle?: () => void;
-  onPress?: () => void;
-}
+import projectManagementAndCRMCore from '../core';
+import { UserResponse } from '../core/Models/UserInterfaces';
 
 export default function UsersScreen({ navigation }: any) {
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const isDarkMode = theme.background === '#121212';
-  const [permissionStatus, setPermissionStatus] =
-    useState<AuthorizationStatus | null>(null);
 
-  // Bildirim izin durumunu kontrol et
-  const checkPermission = async () => {
-    const settings = await notifee.getNotificationSettings();
-    setPermissionStatus(settings.authorizationStatus);
-  };
+  const [users, setUsers] = useState<UserResponse[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<UserResponse[]>([]);
+  const [searchText, setSearchText] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true); // loading state eklendi
 
-  // Test bildirimi gönder
-  const sendTestNotification = async () => {
-    try {
-      await notifee.displayNotification({
-        title: 'Test Bildirimi',
-        body: 'Bu bir test bildirimi.',
-        android: { channelId: 'default', smallIcon: 'ic_launcher' },
-      });
-      Alert.alert('Başarılı', 'Test bildirimi gönderildi!');
-    } catch (err) {
-      Alert.alert('Hata', 'Bildirimi gönderirken bir hata oluştu.');
-      console.log(err);
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const userResponse =
+          await projectManagementAndCRMCore.services.authServices.getUserList();
+
+        const usersWithAvatars = await Promise.all(
+          userResponse.map(async (user: UserResponse) => {
+            let avatar: string | undefined = undefined;
+            if (user.ProfileImageUrl) {
+              try {
+                const profileFile =
+                  await projectManagementAndCRMCore.services.fileService.getFileByPath(
+                    user.ProfileImageUrl,
+                  );
+                if (profileFile?.Base64String) {
+                  avatar = `data:image/jpeg;base64,${profileFile.Base64String}`;
+                }
+              } catch (err) {
+                console.log(`Profil resmi yüklenemedi: ${user.Name}`, err);
+              }
+            }
+            return { ...user, avatar };
+          }),
+        );
+
+        const sortedUsers = sortUsersAlphabetically(usersWithAvatars);
+        setUsers(sortedUsers);
+        setFilteredUsers(sortedUsers);
+      } catch (error) {
+        console.log('Kullanıcıları alırken hata:', error);
+        Alert.alert('Hata', 'Kullanıcıları alırken bir hata oluştu.');
+      } finally {
+        setLoading(false); // veri yüklenince loading false
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  const sortUsersAlphabetically = (usersList: UserResponse[]) =>
+    [...usersList].sort((a, b) => {
+      const nameA = `${a.Name} ${a.SurName}`.toLowerCase();
+      const nameB = `${b.Name} ${b.SurName}`.toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+
+  const handleCall = (phoneNumber?: string) => {
+    if (!phoneNumber) {
+      Alert.alert('Hata', 'Telefon numarası bulunamadı.');
+      return;
     }
-  };
-
-  const handleChangePassword = () => {
-    Alert.alert(
-      'Şifre Değiştir',
-      'Şifre değiştirmek için yöneticinize başvurun.',
+    const formattedNumber = phoneNumber.startsWith('0')
+      ? phoneNumber
+      : `0${phoneNumber}`;
+    Linking.openURL(`tel:${formattedNumber}`).catch(() =>
+      Alert.alert('Hata', 'Arama başlatılamadı'),
     );
   };
 
-  const handleProfileEdit = () => {
-    navigation.navigate('Profile');
+  const normalizeNumber = (num?: string) => {
+    if (!num) return '';
+    return num.replace(/^0+/, '');
   };
 
-  useEffect(() => {
-    checkPermission();
-  }, []);
+  const handleSearch = (text: string) => {
+    setSearchText(text);
+    const lowerText = text.toLowerCase();
+    const normalizedText = normalizeNumber(text);
 
-  const settingsData: SettingItemProps[] = [
-    {
-      title: 'Tema',
-      description: 'Light / Dark Mod',
-      icon: 'dark-mode',
-      type: 'switch',
-      value: isDarkMode,
-      onToggle: toggleTheme,
-    },
-    {
-      title: 'Bildirim Durumu',
-      description:
-        permissionStatus === AuthorizationStatus.AUTHORIZED ? 'Açık' : 'Kapalı',
-      icon: 'notifications',
-      type: 'button',
-      onPress: sendTestNotification, // Test bildirimi için
-    },
-    {
-      title: 'Profil Düzenle',
-      icon: 'account-circle',
-      type: 'button',
-      onPress: handleProfileEdit,
-    },
-    {
-      title: 'Şifre Değiştir',
-      icon: 'lock',
-      type: 'button',
-      onPress: handleChangePassword,
-    },
-    {
-      title: 'Uygulama Versiyonu',
-      icon: 'info',
-      type: 'button',
-      onPress: () => Alert.alert('Versiyon', packageJson.version),
-    },
-  ];
+    const filtered = users.filter(user => {
+      const fullName = `${user.Name} ${user.SurName}`.toLowerCase();
+      const gsm = normalizeNumber(user.Gsm);
+      return fullName.includes(lowerText) || gsm.includes(normalizedText);
+    });
 
-  const renderItem = ({ item }: { item: SettingItemProps }) => {
-    return (
+    setFilteredUsers(filtered);
+  };
+
+  const renderUser = ({
+    item,
+  }: {
+    item: UserResponse & { avatar?: string };
+  }) => (
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: isDarkMode ? '#2C2C2C' : '#F9F9F9' },
+      ]}
+    >
       <TouchableOpacity
-        style={[
-          styles.settingCard,
-          { backgroundColor: isDarkMode ? '#2C2C2C' : '#F9F9F9' },
-        ]}
-        activeOpacity={item.type === 'button' ? 0.7 : 1}
-        onPress={item.type === 'button' ? item.onPress : undefined}
+        onPress={() => {
+          if (item.avatar) {
+            setSelectedImage(item.avatar);
+            setModalVisible(true);
+          }
+        }}
       >
-        <View style={styles.settingLeft}>
-          <MaterialIcons
-            name={item.icon}
-            size={28}
-            color={isDarkMode ? '#FFF' : '#1E1E1E'}
-          />
-          <View style={{ marginLeft: 15 }}>
-            <Text
-              style={[
-                styles.settingTitle,
-                { color: isDarkMode ? '#FFF' : '#1E1E1E' },
-              ]}
-            >
-              {item.title}
-            </Text>
-            {item.description && (
-              <Text
-                style={[
-                  styles.settingDescription,
-                  { color: isDarkMode ? '#CCC' : '#555' },
-                ]}
-              >
-                {item.description}
-              </Text>
-            )}
-          </View>
-        </View>
-
-        {item.type === 'switch' && (
-          <Switch
-            value={item.value}
-            onValueChange={item.onToggle}
-            trackColor={{ false: '#767577', true: theme.primary }}
-            thumbColor={item.value ? '#fff' : '#f4f3f4'}
-          />
-        )}
-        {item.type === 'button' && (
-          <MaterialIcons
-            name="keyboard-arrow-right"
-            size={28}
-            color={isDarkMode ? '#FFF' : '#888'}
+        {item.avatar ? (
+          <Image source={{ uri: item.avatar }} style={styles.avatar} />
+        ) : (
+          <Image
+            source={require('../assets/applogo.png')}
+            style={styles.avatar}
           />
         )}
       </TouchableOpacity>
+
+      <View style={styles.info}>
+        <Text style={[styles.name, { color: isDarkMode ? '#FFF' : '#1E1E1E' }]}>
+          {item.Name} {item.SurName}
+        </Text>
+        {item.Gsm && (
+          <Text style={[styles.phone, { color: isDarkMode ? '#CCC' : '#555' }]}>
+            {item.Gsm.startsWith('0') ? item.Gsm : `0${item.Gsm}`}
+          </Text>
+        )}
+        {item.Email && (
+          <Text style={[styles.email, { color: isDarkMode ? '#CCC' : '#555' }]}>
+            {item.Email}
+          </Text>
+        )}
+      </View>
+      <TouchableOpacity onPress={() => handleCall(item.Gsm)}>
+        <MaterialIcons name="call" size={28} color={theme.primary} />
+      </TouchableOpacity>
+    </View>
+  );
+
+  // YÜKLENİYOR ekranı
+  if (loading) {
+    return (
+      <View
+        style={[
+          styles.container,
+          {
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: theme.background,
+          },
+        ]}
+      >
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={{ marginTop: 10, color: theme.text }}>Yükleniyor...</Text>
+      </View>
     );
-  };
+  }
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: isDarkMode ? '#121212' : '#FFF' },
-      ]}
-    >
-      <Text style={[styles.title, { color: isDarkMode ? '#FFF' : '#000' }]}>
-        Ayarlar
-      </Text>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View
+        style={[
+          styles.searchContainer,
+          { backgroundColor: isDarkMode ? '#2C2C2C' : '#F0F0F0' },
+        ]}
+      >
+        <MaterialIcons
+          name="search"
+          size={22}
+          color={isDarkMode ? '#CCC' : '#555'}
+        />
+        <TextInput
+          style={[styles.searchInput, { color: isDarkMode ? '#FFF' : '#000' }]}
+          placeholder="İsim veya numara ara"
+          placeholderTextColor={isDarkMode ? '#888' : '#999'}
+          value={searchText}
+          onChangeText={handleSearch}
+        />
+      </View>
+
       <FlatList
-        data={settingsData}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={renderItem}
+        data={filteredUsers}
+        keyExtractor={item => item.Oid.toString()}
+        renderItem={renderUser}
         contentContainerStyle={{ paddingBottom: 20 }}
       />
+
+      <Modal visible={modalVisible} transparent animationType="fade">
+        <View style={styles.modalContainer}>
+          <TouchableOpacity
+            style={styles.modalBackground}
+            onPress={() => setModalVisible(false)}
+          />
+          <Image
+            source={{ uri: selectedImage || '' }}
+            style={styles.modalImage}
+          />
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20 },
-  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 20 },
-  settingCard: {
+  searchContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 12,
+    marginBottom: 15,
+  },
+  searchInput: { flex: 1, marginLeft: 8, fontSize: 16 },
+  card: {
+    flexDirection: 'row',
     alignItems: 'center',
     padding: 15,
     borderRadius: 12,
@@ -198,7 +244,28 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  settingLeft: { flexDirection: 'row', alignItems: 'center' },
-  settingTitle: { fontSize: 18, fontWeight: '600' },
-  settingDescription: { fontSize: 14, marginTop: 2 },
+  avatar: { width: 50, height: 50, borderRadius: 25 },
+  info: { flex: 1, marginLeft: 15 },
+  name: { fontSize: 18, fontWeight: '600' },
+  phone: { fontSize: 14, marginTop: 2 },
+  email: { fontSize: 14, marginTop: 2, fontStyle: 'italic' },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalBackground: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#00000088',
+  },
+  modalImage: {
+    width: '80%',
+    height: '60%',
+    resizeMode: 'contain',
+    borderRadius: 10,
+  },
 });
