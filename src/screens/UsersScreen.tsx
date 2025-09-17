@@ -46,8 +46,8 @@ export default function UsersScreen() {
                 if (profileFile?.Base64String) {
                   avatar = `data:image/jpeg;base64,${profileFile.Base64String}`;
                 }
-              } catch (err) {
-                console.log(`Profil resmi yüklenemedi: ${user.Name}`, err);
+              } catch (err: any) {
+                Alert.alert(`Profil resmi yüklenemedi: ${user.Name}`, err);
               }
             }
             return { ...user, avatar };
@@ -58,7 +58,6 @@ export default function UsersScreen() {
         setUsers(sortedUsers);
         setFilteredUsers(sortedUsers);
       } catch (error) {
-        console.log('Kullanıcıları alırken hata:', error);
         Alert.alert('Hata', 'Kullanıcıları alırken bir hata oluştu.');
       } finally {
         setLoading(false); // veri yüklenince loading false

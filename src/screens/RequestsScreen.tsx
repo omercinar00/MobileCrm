@@ -141,7 +141,6 @@ export default function RequestsScreen({ navigation }: any) {
   };
 
   const onDetailButtonClicked = async (rowData: any) => {
-    console.log('🚀 ~ onDetailButtonClicked ~ rowData:', rowData);
     if (!rowData) return;
 
     setLoading(true);
@@ -163,7 +162,6 @@ export default function RequestsScreen({ navigation }: any) {
           await projectManagementAndCRMCore.services.taskService.getTaskInfo(
             rowData.Oid,
           );
-        console.log('🚀 ~ onDetailButtonClicked ~ detailData:', detailData);
         screenName = 'RequestDetail';
       } else if (rowData.Type === '1') {
         // ERROR
@@ -171,19 +169,10 @@ export default function RequestsScreen({ navigation }: any) {
           await projectManagementAndCRMCore.services.errorService.getErrorInfo(
             rowData.Oid,
           );
-        console.log('🚀 ~ onDetailButtonClicked ~ detailData:', detailData);
         screenName = 'ErrorDetail';
       }
 
       // Navigation
-      console.log(
-        '🚀 ~ onDetailButtonClicked ~ onDetailButtonClicked.detailData:',
-        detailData,
-      );
-      console.log(
-        '🚀 ~ onDetailButtonClicked ~ onDetailButtonClicked.allPageServices:',
-        allPageServices,
-      );
       navigation.navigate(screenName, {
         detailData: detailData,
         allPageServices: allPageServices,

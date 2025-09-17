@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import {
   Avatar,
   Card,
@@ -66,11 +66,10 @@ const GeneralInfoScreen = () => {
             setProfileImg(parsedDetail.profileImg);
           }
         }
-      } catch (err) {
-        console.log('AsyncStorage error:', err);
-      } finally {
-        setLoading(false);
-      }
+    } catch (error) {
+      setLoading(false);
+      Alert.alert('Hata', (error as string) || 'Veri çekilemedi');
+    } 
     };
 
     loadData();

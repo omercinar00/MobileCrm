@@ -66,10 +66,9 @@ export default function AllRequestErrorListScreen({ navigation }: any) {
       setData(list);
       setFilteredData(list);
     } catch (error) {
-      Alert.alert('Hata', (error as string) || 'Veri çekilemedi');
-    } finally {
       setLoading(false);
-    }
+      Alert.alert('Hata', (error as string) || 'Veri çekilemedi');
+    } 
   };
 
   const onRefresh = async () => {

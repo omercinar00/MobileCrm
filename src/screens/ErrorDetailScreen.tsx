@@ -89,7 +89,6 @@ const ErrorDetailScreen: React.FC<ErrorDetailScreenProps> = ({
           <Button
             mode="contained"
             onPress={() => {
-              console.log('Yorum eklendi:', commentText);
               setCommentText('');
             }}
             style={{ marginTop: 5 }}

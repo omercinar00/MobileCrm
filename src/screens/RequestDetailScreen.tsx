@@ -46,7 +46,6 @@ function RequestDetailScreen({ navigation, route }: RequestDetailScreenProps) {
   const comments = detailData || [];
   const history = (detailData?.TaskDetailList || []).slice().reverse();
   const documents = detailData?.TaskDocumentList || [];
-  console.log('🚀 ~ RequestDetailScreen ~ detailData:', detailData);
 
   // Talep bilgileri için iki sütunlu yapı
   const infoItems = [
@@ -219,7 +218,6 @@ function RequestDetailScreen({ navigation, route }: RequestDetailScreenProps) {
           <Button
             mode="contained"
             onPress={() => {
-              console.log('Yorum eklendi:', commentText);
               setCommentText('');
             }}
             style={{ marginTop: 5, backgroundColor: theme.primary }}

@@ -71,10 +71,9 @@ export default function ProfileScreen() {
             setProfileImg(`data:image/jpeg;base64,${profileFile.Base64String}`);
           }
         }
-      } catch (e: any) {
-        Alert.alert('Hata', e?.message || e);
-      } finally {
+      } catch (error: any) {
         setLoading(false);
+        Alert.alert('Hata', error?.message || error);
       }
     };
     loadUser();

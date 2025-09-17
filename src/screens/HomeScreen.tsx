@@ -9,6 +9,7 @@ import {
   Modal,
   Image,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -66,10 +67,9 @@ export default function HomeScreen({ navigation }: any) {
             : 'Unvan yok',
         );
       } catch (error) {
-        console.log('❌ loadUser error:', error);
-      } finally {
-        setLoadingImage(false);
-      }
+      setLoadingImage(false);
+      Alert.alert('Hata', (error as string) || 'Veri çekilemedi');
+    } 
     };
 
     loadUser();
@@ -110,7 +110,7 @@ export default function HomeScreen({ navigation }: any) {
       <View style={[styles.header, { backgroundColor: theme.cardBackground }]}>
         {/* Sol Hamburger */}
         {/* <Pressable
-          onPress={() => console.log('Hamburger açıldı')}
+          onPress={() => }
           style={styles.icon}
         >
           <Icon name="menu" size={28} color={theme.text} />

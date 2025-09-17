@@ -49,7 +49,6 @@ export default function SettingsScreen({ navigation }: any) {
       Alert.alert('Başarılı', 'Test bildirimi gönderildi!');
     } catch (err) {
       Alert.alert('Hata', 'Bildirimi gönderirken bir hata oluştu.');
-      console.log(err);
     }
   };
 
