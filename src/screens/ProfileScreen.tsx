@@ -124,7 +124,7 @@ export default function ProfileScreen() {
       <View style={styles.imageContainer}>
         <Image
           source={
-            profileImg ? { uri: profileImg } : require('../assets/logo.png')
+            profileImg ? { uri: profileImg } : require('../assets/applogo.png')
           }
           style={styles.profileImage}
         />

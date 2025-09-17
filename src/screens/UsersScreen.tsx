@@ -26,7 +26,7 @@ interface SettingItemProps {
   onPress?: () => void;
 }
 
-export default function SettingsScreen({ navigation }: any) {
+export default function UsersScreen({ navigation }: any) {
   const { theme, toggleTheme } = useTheme();
   const isDarkMode = theme.background === '#121212';
   const [permissionStatus, setPermissionStatus] =

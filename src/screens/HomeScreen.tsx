@@ -25,7 +25,9 @@ export default function HomeScreen({ navigation }: any) {
   const [rememberMe, setRememberMe] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [menuVisible, setMenuVisible] = useState(false);
-  const [filteredMenu, setFilteredMenu] = useState(menuItems);
+  const [filteredMenu, setFilteredMenu] = useState(
+    menuItems.sort((a, b) => a.title.localeCompare(b.title)),
+  );
 
   // Kullanıcıyı yükle
   useEffect(() => {
@@ -49,7 +51,6 @@ export default function HomeScreen({ navigation }: any) {
               await projectManagementAndCRMCore.services.fileService.getFileByPath(
                 parsedUser.ProfileImageUrl,
               );
-            console.log('🚀 ~ loadUser ~ profileFile:', profileFile);
             setProfileImageUri(
               `data:image/jpeg;base64,${profileFile.Base64String}`,
             );
@@ -99,12 +100,12 @@ export default function HomeScreen({ navigation }: any) {
       {/* Üst Header */}
       <View style={[styles.header, { backgroundColor: theme.cardBackground }]}>
         {/* Sol Hamburger */}
-        <Pressable
+        {/* <Pressable
           onPress={() => console.log('Hamburger açıldı')}
           style={styles.icon}
         >
           <Icon name="menu" size={28} color={theme.text} />
-        </Pressable>
+        </Pressable> */}
 
         {/* Arama */}
         <View
@@ -132,8 +133,20 @@ export default function HomeScreen({ navigation }: any) {
         </View>
 
         {/* Sağ Üç Nokta */}
+        {/* Sağ Profil Resmi */}
         <Pressable onPress={() => setMenuVisible(true)} style={styles.icon}>
-          <Icon name="dots-vertical" size={28} color={theme.text} />
+          {loadingImage ? (
+            <ActivityIndicator size="small" color={theme.primary} />
+          ) : (
+            <Image
+              source={
+                profileImageUri
+                  ? { uri: profileImageUri }
+                  : require('../assets/applogo.png')
+              }
+              style={{ width: 36, height: 36, borderRadius: 18 }}
+            />
+          )}
         </Pressable>
       </View>
 
@@ -159,10 +172,17 @@ export default function HomeScreen({ navigation }: any) {
               navigation.navigate('Profile');
             }}
           >
+            <Icon
+              name="account-circle"
+              size={20}
+              color={theme.text}
+              style={styles.modalIcon}
+            />
             <Text style={[styles.modalText, { color: theme.text }]}>
               Profil
             </Text>
           </Pressable>
+
           <Pressable
             style={styles.modalItem}
             onPress={() => {
@@ -170,11 +190,24 @@ export default function HomeScreen({ navigation }: any) {
               navigation.navigate('Settings');
             }}
           >
+            <Icon
+              name="cog"
+              size={20}
+              color={theme.text}
+              style={styles.modalIcon}
+            />
             <Text style={[styles.modalText, { color: theme.text }]}>
               Ayarlar
             </Text>
           </Pressable>
+
           <Pressable style={styles.modalItem} onPress={handleLogout}>
+            <Icon
+              name="logout"
+              size={20}
+              color={theme.errorText}
+              style={styles.modalIcon}
+            />
             <Text style={[styles.modalText, { color: theme.errorText }]}>
               Çıkış Yap
             </Text>
@@ -184,14 +217,6 @@ export default function HomeScreen({ navigation }: any) {
 
       {/* Kullanıcı Bilgisi */}
       <View style={styles.userInfo}>
-        {loadingImage ? (
-          <ActivityIndicator size="small" color={theme.primary} />
-        ) : (
-          <Image
-            source={{ uri: profileImageUri }}
-            style={styles.profileImage}
-          />
-        )}
         <Text style={[styles.userName, { color: theme.text }]}>{userName}</Text>
       </View>
 
@@ -269,7 +294,7 @@ const styles = StyleSheet.create({
   },
   menuModal: {
     position: 'absolute',
-    top: 50,
+    top: 70,
     right: 10,
     width: 150,
     borderRadius: 8,
@@ -280,7 +305,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 3,
   },
-  modalItem: { paddingVertical: 10, paddingHorizontal: 15 },
+  modalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+  },
+  modalIcon: {
+    marginRight: 10,
+  },
   modalText: { fontSize: 16 },
   userInfo: {
     alignItems: 'center',

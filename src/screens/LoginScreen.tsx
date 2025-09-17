@@ -24,9 +24,7 @@ export default function LoginScreen({ navigation }: any) {
   useEffect(() => {
     const loadCredentials = async () => {
       const savedUser = await AsyncStorage.getItem('user');
-      console.log('🚀 ~ loadCredentials ~ savedUser:', savedUser);
       const savedPass = await AsyncStorage.getItem('password');
-      console.log('🚀 ~ loadCredentials ~ savedPass:', savedPass);
       const savedRememberMe = await AsyncStorage.getItem('rememberMe');
 
       if (savedUser && savedPass && savedRememberMe === 'true') {

@@ -47,13 +47,13 @@ export function getPriorityColor(
 
   switch (priorityCode) {
     case '1': // Çok Yüksek
-      return '#FF4D4F';
+    return '#73D13D';
     case '2': // Yüksek
-      return '#FFA940';
+    return '#FFEC3D';
     case '3': // Orta
-      return '#FFEC3D';
+    return '#FFA940';
     case '4': // Düşük
-      return '#73D13D';
+    return '#FF4D4F';
     default:
       return '#E0E0E0'; // bilinmeyen veya boş
   }
@@ -73,3 +73,14 @@ export const formatDate = (value: string) => {
   const day = value.substr(6, 2);
   return `${day}.${month}.${year}`; // GG.AA.YYYY formatı
 };
+
+export function convertUserOidToName(userOid: number, userList: any) {
+  let userName = 'Bulunamadı';
+  if (userList && userList.length > 0) {
+    const userInfo = userList.find((item: any) => item.Oid === userOid);
+    if (userInfo) return (userName = `${userInfo.Name} ${userInfo.SurName}`);
+    else return userName;
+  } else {
+    return 'Bulunamadı';
+  }
+}

@@ -17,6 +17,18 @@
     "headerTitle": "Profil"
   },
   {
+    "name": "GeneralInfo",
+    "component": "GeneralInfoScreen",
+    "headerShown": true,
+    "headerTitle": "Genel Bakış"
+  },
+  {
+    "name": "Users",
+    "component": "UsersScreen",
+    "headerShown": true,
+    "headerTitle": "Kullanıcılar"
+  },
+  {
     "name": "AllList",
     "component": "AllListScreen",
     "headerShown": true,

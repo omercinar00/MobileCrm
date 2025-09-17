@@ -35,7 +35,7 @@ export default function SplashScreen({ onFinish }: { onFinish: () => void }) {
   return (
     <Animated.View style={[styles.splashContainer, { opacity: fadeAnim }]}>
       <Image
-        source={require('../assets/logo.png')} // logo yolunu kendi dosyana göre değiştir
+        source={require('../assets/applogo.png')} // logo yolunu kendi dosyana göre değiştir
         style={styles.logo}
         resizeMode="contain"
       />

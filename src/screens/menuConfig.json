@@ -1,26 +1,38 @@
 [
   {
-    "title": "Profil",
-    "screen": "Profile",
-    "icon": "account-circle",
-    "color": "#4caf50"
+    "title": "Ayarlar",
+    "screen": "Settings",
+    "icon": "cog",
+    "color": "#607d8b" // Gri-mavi: Ayarlar için nötr
+  },
+  {
+    "title": "Genel Bakış",
+    "screen": "GeneralInfo",
+    "icon": "chart-bar",
+    "color": "#2196f3" // Mavi: Analiz, genel görünüm için
   },
   {
     "title": "Hata/Talep Listem",
     "screen": "Requests",
     "icon": "clipboard-list",
-    "color": "#2196f3"
+    "color": "#f44336" // Kırmızı: Hata/şikayet vurgusu
+  },
+  {
+    "title": "Kullanıcılar",
+    "screen": "Users",
+    "icon": "account-multiple",
+    "color": "#9c27b0" // Mor: Kullanıcı yönetimi
+  },
+  {
+    "title": "Profil",
+    "screen": "Profile",
+    "icon": "account-circle",
+    "color": "#4caf50" // Yeşil: Kişisel profil
   },
   {
     "title": "Tüm Liste",
     "screen": "AllList",
     "icon": "format-list-bulleted",
-    "color": "#ff9800"
-  },
-  {
-    "title": "Ayarlar",
-    "screen": "Settings",
-    "icon": "cog",
-    "color": "#9c27b0"
+    "color": "#ff9800" // Turuncu: Genel liste
   }
 ]

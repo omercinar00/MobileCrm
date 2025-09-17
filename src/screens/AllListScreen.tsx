@@ -5,65 +5,25 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  Modal,
-  ScrollView,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import projectManagementAndCRMCore from '../core';
-
-// Utils
-export function convertIntToDateTime(value: any): string {
-  if (!value) return 'Bulunmadı';
-  const str = value.toString();
-  const year = +str.substr(0, 4);
-  const month = +str.substr(4, 2) - 1; // JS ayları 0-11
-  const day = +str.substr(6, 2);
-  const hour = +str.substr(8, 2);
-  const min = +str.substr(10, 2);
-  return new Date(year, month, day, hour, min).toLocaleString('tr-TR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-export function convertPriorityCodeToName(
-  priorityCode: string,
-  priorityList: any,
-) {
-  const item = priorityList.find((p: any) => p.ParameterCode === priorityCode);
-  return item ? item.ParameterName : '';
-}
-
-export function convertTaskStatusCodeToName(
-  statusCode: number,
-  statusList: any,
-) {
-  const item = statusList.find((s: any) => s.ParameterCode === statusCode);
-  return item ? item.ParameterName : '';
-}
-
-export function getPriorityColor(priorityCode: string) {
-  switch (priorityCode) {
-    case '1':
-      return '#2E7D32'; // Düşük
-    case '2':
-      return '#F9A825'; // Orta
-    case '3':
-      return '#C62828'; // Yüksek
-    default:
-      return '#757575';
-  }
-}
+import FilterModal from '../components/FilterModal';
+import {
+  convertIntToDateTime,
+  getPriorityColor,
+  convertPriorityCodeToName,
+  convertUserOidToName,
+} from '../utils';
 
 // Sabit listeler
 const priorityList = [
   { ParameterCode: '1', ParameterName: 'Düşük' },
-  { ParameterCode: '2', ParameterName: 'Orta' },
+  { ParameterCode: '2', ParameterName: 'Normal' },
   { ParameterCode: '3', ParameterName: 'Yüksek' },
+  { ParameterCode: '4', ParameterName: 'Kritik' },
 ];
 
 const statusList = [
@@ -74,59 +34,95 @@ const statusList = [
 export default function AllRequestErrorListScreen({ navigation }: any) {
   const { theme } = useTheme();
   const [data, setData] = useState<any[]>([]);
+  const [filteredData, setFilteredData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
+
+  const [userList, setUserList] = useState<any[]>([]);
+
+  // Filtre state
+  const [filterType, setFilterType] = useState<string | null>(null); // '1' = Hata, '2' = Talep
+  const [filterStatus, setFilterStatus] = useState<number | null>(null); // 1 = Aktif, 2 = Kapalı
+  const [filterPriority, setFilterPriority] = useState<string | null>(null); // '1', '2', '3'
 
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
-    setLoading(true);
-
-    const queryRequest: any = {};
-    queryRequest.IsActive = true;
-    let errorAndTaskList_ =
-      await projectManagementAndCRMCore.services.taskAndErrorService.getTaskAndErrorListByCriteria(
-        queryRequest,
+    try {
+      setLoading(true);
+      setUserList(
+        await projectManagementAndCRMCore.services.authServices.getUserList(),
       );
+      const queryRequest: any = { IsActive: true };
 
-    // Son gelen en üstte olacak şekilde No'ya göre sıralıyoruz
-    errorAndTaskList_ = errorAndTaskList_.sort((a: any, b: any) => b.No - a.No);
+      let list =
+        await projectManagementAndCRMCore.services.taskAndErrorService.getTaskAndErrorListByCriteria(
+          queryRequest,
+        );
+      list = list.sort((a: any, b: any) => b.No - a.No);
+      setData(list);
+      setFilteredData(list);
+    } catch (error) {
+      Alert.alert('Hata', (error as string) || 'Veri çekilemedi');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    setData(errorAndTaskList_);
-    setLoading(false);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  };
+
+  const applyFilters = () => {
+    let filtered = data;
+    if (filterType)
+      filtered = filtered.filter(item => item.Type === filterType);
+    if (filterStatus)
+      filtered = filtered.filter(item => item.StatusCode === filterStatus);
+    if (filterPriority)
+      filtered = filtered.filter(item => item.Priority === filterPriority);
+    setFilteredData(filtered);
+    setFilterModalVisible(false);
   };
 
   const renderItem = ({ item }: any) => (
     <TouchableOpacity
       style={[styles.itemContainer, { backgroundColor: theme.cardBackground }]}
-      onPress={() => {
-        if (item.Type === '1') {
-          navigation.navigate('ErrorDetail', { item }); // Hata için ayrı detay sayfası
-        } else {
-          navigation.navigate('RequestDetail', { item }); // Talep için ayrı detay sayfası
-        }
-      }}
+      onPress={() =>
+        navigation.navigate(
+          item.Type === '1' ? 'ErrorDetail' : 'RequestDetail',
+          { item },
+        )
+      }
     >
       <View style={{ flex: 1 }}>
-        <Text style={[styles.title, { color: theme.text }]}>
-          #{item.No} - {item.Title}
+        <Text style={[styles.typeNo, { color: theme.text }]}>
+          {item.Type === '1' ? 'HATA' : 'TALEP'} - {item.No}
         </Text>
+        <Text style={[styles.title, { color: theme.text }]}>{item.Title}</Text>
         <Text style={[styles.subtitle, { color: theme.text }]}>
-          {item.Type === '1' ? 'Hata' : 'Talep'} |{' '}
           {convertIntToDateTime(item.CreatedDate)}
         </Text>
         <Text style={[styles.subtitle, { color: theme.text }]}>
-          Kimin: {item.CreatedUserName}
+          Atayan: {convertUserOidToName(item.SenderUserOid, userList)}
+        </Text>
+        <Text style={[styles.subtitle, { color: theme.text }]}>
+          Atanan: {convertUserOidToName(item.SendUserOid, userList)}
         </Text>
       </View>
       <View
         style={{
           backgroundColor: getPriorityColor(item.Priority),
-          padding: 8,
+          width: 70, // Sabit genişlik
+          height: 30, // Sabit yükseklik
           borderRadius: 6,
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
         <Text style={{ color: '#fff' }}>
@@ -148,60 +144,28 @@ export default function AllRequestErrorListScreen({ navigation }: any) {
       </TouchableOpacity>
 
       <FlatList
-        data={data}
+        data={filteredData}
         keyExtractor={item => item.Oid.toString()}
         renderItem={renderItem}
         contentContainerStyle={{ paddingBottom: 100 }}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
       />
 
-      {/* Detay Modal */}
-      <Modal visible={!!selectedItem} animationType="slide">
-        <ScrollView style={{ padding: 16 }}>
-          <Text style={{ fontWeight: 'bold', fontSize: 20 }}>
-            {selectedItem?.Title}
-          </Text>
-          <Text style={{ marginVertical: 6 }}>
-            Tip: {selectedItem?.Type === '1' ? 'Hata' : 'Talep'}
-          </Text>
-          <Text style={{ marginVertical: 6 }}>
-            Durum:{' '}
-            {convertTaskStatusCodeToName(selectedItem?.StatusCode, statusList)}
-          </Text>
-          <Text style={{ marginVertical: 6 }}>
-            Önem:{' '}
-            {convertPriorityCodeToName(selectedItem?.Priority, priorityList)}
-          </Text>
-          <Text style={{ marginVertical: 6 }}>
-            Kimin oluşturduğu: {selectedItem?.CreatedUserName}
-          </Text>
-          <Text style={{ marginVertical: 6 }}>
-            Tarih: {convertIntToDateTime(selectedItem?.CreatedDate)}
-          </Text>
-
-          <TouchableOpacity
-            style={[styles.closeButton, { backgroundColor: theme.primary }]}
-            onPress={() => setSelectedItem(null)}
-          >
-            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Kapat</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </Modal>
-
       {/* Filtre Modal */}
-      <Modal visible={filterModalVisible} animationType="slide">
-        <ScrollView style={{ padding: 16 }}>
-          <Text style={{ fontWeight: 'bold', fontSize: 18 }}>Filtreler</Text>
-          {/* Buraya Picker / DatePicker / RadioButton ekle */}
-          <TouchableOpacity
-            style={[styles.closeButton, { backgroundColor: theme.primary }]}
-            onPress={() => setFilterModalVisible(false)}
-          >
-            <Text style={{ color: '#fff', fontWeight: 'bold' }}>
-              Uygula / Kapat
-            </Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </Modal>
+      <FilterModal
+        visible={filterModalVisible}
+        onClose={() => setFilterModalVisible(false)}
+        filterType={filterType}
+        setFilterType={setFilterType}
+        filterStatus={filterStatus}
+        setFilterStatus={setFilterStatus}
+        filterPriority={filterPriority}
+        setFilterPriority={setFilterPriority}
+        applyFilters={applyFilters}
+        priorityList={priorityList}
+        statusList={statusList}
+      />
     </View>
   );
 }
@@ -216,20 +180,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 2,
   },
-  title: { fontSize: 16, fontWeight: 'bold' },
-  subtitle: { fontSize: 14 },
-  priorityBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  typeNo: { fontSize: 16, fontWeight: 'bold', marginBottom: 2 },
+  title: { fontSize: 14, fontWeight: '600', marginBottom: 4 },
+  subtitle: { fontSize: 12, color: '#757575', marginBottom: 2 },
   filterButton: {
     backgroundColor: '#5898F1',
     padding: 10,
     borderRadius: 6,
     marginBottom: 10,
-    alignItems: 'center',
-  },
-  closeButton: {
-    marginTop: 20,
-    padding: 12,
-    borderRadius: 6,
     alignItems: 'center',
   },
 });

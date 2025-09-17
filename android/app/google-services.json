@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "658599824476",
+    "project_id": "blscrm",
+    "storage_bucket": "blscrm.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:658599824476:android:1f14ffe7b298d4c4f1ea99",
+        "android_client_info": {
+          "package_name": "com.mobilecrm"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANh_ZKwDdOLi8ESqwtyakvayfgG5--vbU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
