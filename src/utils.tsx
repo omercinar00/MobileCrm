@@ -74,6 +74,11 @@ export const formatDate = (value: string) => {
   return `${day}.${month}.${year}`; // GG.AA.YYYY formatı
 };
 
+export const convertDateToNumber = (dateStr: string): number => {
+  const [day, month, year] = dateStr.split('.');
+  return Number(`${year}${month}${day}`);
+};
+
 export function convertUserOidToName(userOid: number, userList: any) {
   let userName = 'Bulunamadı';
   if (userList && userList.length > 0) {
@@ -134,7 +139,6 @@ export function formatDate2(date: number) {
   const day = dateString.slice(6, 8);
   const hour = dateString.slice(8, 10);
   const minute = dateString.slice(10, 12);
-  const second = dateString.slice(12, 14);
 
   const monthNames = [
     'Ocak',

@@ -54,6 +54,7 @@ const GeneralInfoScreen = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
+        setLoading(true);
         const storedUserDetail = await AsyncStorage.getItem('userDetail');
         if (storedUserDetail) {
           const parsedDetail = JSON.parse(storedUserDetail);
@@ -66,10 +67,11 @@ const GeneralInfoScreen = () => {
             setProfileImg(parsedDetail.profileImg);
           }
         }
-    } catch (error) {
-      setLoading(false);
-      Alert.alert('Hata', (error as string) || 'Veri çekilemedi');
-    } 
+        setLoading(false);
+      } catch (error) {
+        setLoading(false);
+        Alert.alert('Hata', (error as string) || 'Veri çekilemedi');
+      }
     };
 
     loadData();

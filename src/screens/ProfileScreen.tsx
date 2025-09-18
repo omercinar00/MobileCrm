@@ -13,16 +13,17 @@ import {
 import { useTheme } from '../theme/ThemeContext';
 import projectManagementAndCRMCore from '../core';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { formatDate } from '../utils';
-import { launchImageLibrary } from 'react-native-image-picker';
+import { convertDateToNumber, formatDate } from '../utils';
 import { UpdateUserRequest } from '../core/Models/UserInterfaces';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { OnFileChangeMobile } from '../uploadFile';
 
 export default function ProfileScreen() {
   const { theme } = useTheme();
 
   const [loading, setLoading] = useState(true);
+  const [loadingImage, setLoadingImage] = useState(true);
   const [profileImg, setProfileImg] = useState<string | null>(null);
   const [currentUserInfo, setCurrentUserInfo] = useState<any>(null);
 
@@ -71,6 +72,7 @@ export default function ProfileScreen() {
             setProfileImg(`data:image/jpeg;base64,${profileFile.Base64String}`);
           }
         }
+        setLoading(false);
       } catch (error: any) {
         setLoading(false);
         Alert.alert('Hata', error?.message || error);
@@ -81,28 +83,13 @@ export default function ProfileScreen() {
 
   const handleChangeImageFile = () => {
     setLoading(true);
-    launchImageLibrary(
-      { mediaType: 'photo', maxWidth: 500, maxHeight: 500, quality: 0.8 },
-      async response => {
-        if (response.didCancel) {
-          setLoading(false);
-          return;
-        }
-        if (response.errorCode) {
-          setLoading(false);
-          Alert.alert('Hata', response.errorMessage || 'Resim seçilemedi');
-          return;
-        }
-        if (response.assets && response.assets.length > 0) {
-          const file = response.assets[0];
-          setProfileImg(file.uri);
-          setUploadedDocument({
-            name: file.fileName,
-            type: file.type,
-            uri: file.uri,
-          });
-          setLoading(false);
-        }
+    OnFileChangeMobile(
+      '', // fileExplanation
+      { ActivityType: '', ActivitySubType: '', ModuleName: 'ProfileImages' }, // willAddObject
+      (tempFile: any, willUploadFile: any) => {
+        setUploadedDocument(tempFile); // mobilde Base64 saklanacak
+        setProfileImg(`data:image/jpeg;base64,${tempFile.Base64String}`); // önizleme
+        setLoading(false);
       },
     );
   };
@@ -121,25 +108,41 @@ export default function ProfileScreen() {
       setLoading(true);
 
       // Dosya yükleme
+      console.log(
+        '🚀 ~ onUpdateUserInfo ~ uploadedDocument:',
+        uploadedDocument,
+      );
       if (uploadedDocument) {
         await projectManagementAndCRMCore.services.fileService.uploadFile({
           UserName: currentUserInfo.UserName,
           Request: uploadedDocument,
         });
       }
+      const year = new Date().getFullYear();
 
+      const profielImg_ =
+        uploadedDocument && Object.keys(uploadedDocument).length > 0
+          ? `\\${year}\\ProfileImages\\${uploadedDocument.FileName}${uploadedDocument.FileExtension}`
+          : null;
       const updatedData: UpdateUserRequest = {
-        ...currentUserInfo,
+        Oid: currentUserInfo.Oid,
         Name: name,
         SurName: surname,
-        BirthDay: birthDate,
-        Gsm: gsm,
+        UserName: currentUserInfo.UserName,
+        Password: newPassword,
+        TitleCode: currentUserInfo.TitleCode,
+        BirthDay: convertDateToNumber(birthDate),
         Email: email,
-        Password: newPassword || currentUserInfo.Password,
-        ProfileImageUrl:
-          uploadedDocument?.uri || currentUserInfo.ProfileImageUrl,
+        Gender: currentUserInfo.Gender,
+        IsActive: currentUserInfo.IsActive,
+        CompanyOid: currentUserInfo.CompanyOid,
+        UserOid: currentUserInfo.UserOid,
+        RoleCode: currentUserInfo.RoleCode,
+        Gsm: gsm,
+        ProfileImageUrl: profielImg_ || currentUserInfo.ProfileImageUrl,
       };
 
+      console.log('🚀 ~ onUpdateUserInfo ~ updatedData:', updatedData);
       await projectManagementAndCRMCore.services.authServices.updateUser(
         updatedData,
       );

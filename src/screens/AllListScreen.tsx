@@ -65,10 +65,11 @@ export default function AllRequestErrorListScreen({ navigation }: any) {
       list = list.sort((a: any, b: any) => b.No - a.No);
       setData(list);
       setFilteredData(list);
+      setLoading(false);
     } catch (error) {
       setLoading(false);
       Alert.alert('Hata', (error as string) || 'Veri çekilemedi');
-    } 
+    }
   };
 
   const onRefresh = async () => {

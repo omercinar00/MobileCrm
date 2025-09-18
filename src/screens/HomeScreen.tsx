@@ -66,10 +66,11 @@ export default function HomeScreen({ navigation }: any) {
                 ?.TitleName || 'Unvan yok'
             : 'Unvan yok',
         );
+        setLoadingImage(false);
       } catch (error) {
-      setLoadingImage(false);
-      Alert.alert('Hata', (error as string) || 'Veri çekilemedi');
-    } 
+        setLoadingImage(true);
+        Alert.alert('Hata', (error as string) || 'Veri çekilemedi');
+      }
     };
 
     loadUser();
