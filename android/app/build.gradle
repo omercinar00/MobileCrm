@@ -95,18 +95,34 @@ android {
             keyPassword 'android'
         }
     }
-    buildTypes {
-        debug {
-            signingConfig signingConfigs.debug
-        }
-        release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
-            minifyEnabled enableProguardInReleaseBuilds
-            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+buildTypes {
+    debug {
+        signingConfig signingConfigs.debug
+        // APK adı değiştirme
+        applicationVariants.all { variant ->
+            if (variant.buildType.name == "debug") {
+                variant.outputs.all { output ->
+                    outputFileName = "BLSCRM-Debug-${variant.versionName}.apk"
+                }
+            }
         }
     }
+    release {
+        signingConfig signingConfigs.debug
+        minifyEnabled enableProguardInReleaseBuilds
+        proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+
+        // APK adı değiştirme
+        applicationVariants.all { variant ->
+            if (variant.buildType.name == "release") {
+                variant.outputs.all { output ->
+                    outputFileName = "BLSCRM-Release-${variant.versionName}.apk"
+                }
+            }
+        }
+    }
+}
+
 }
 
 dependencies {
