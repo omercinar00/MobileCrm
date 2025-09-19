@@ -3,36 +3,42 @@
     "title": "Ayarlar",
     "screen": "Settings",
     "icon": "cog",
-    "color": "#607d8b" // Gri-mavi: Ayarlar için nötr
+    "color": "#607d8b"
   },
   {
     "title": "Genel Bakış",
     "screen": "GeneralInfo",
     "icon": "chart-bar",
-    "color": "#2196f3" // Mavi: Analiz, genel görünüm için
+    "color": "#2196f3"
   },
   {
     "title": "Hata/Talep Listem",
     "screen": "Requests",
     "icon": "clipboard-list",
-    "color": "#f44336" // Kırmızı: Hata/şikayet vurgusu
+    "color": "#f44336"
   },
   {
     "title": "Kullanıcılar",
     "screen": "Users",
-    "icon": "account-multiple",
-    "color": "#9c27b0" // Mor: Kullanıcı yönetimi
+    "icon": "card-account-details-outline",
+    "color": "#9c27b0"
   },
   {
     "title": "Profil",
     "screen": "Profile",
     "icon": "account-circle",
-    "color": "#4caf50" // Yeşil: Kişisel profil
+    "color": "#4caf50"
   },
   {
     "title": "Tüm Liste",
     "screen": "AllList",
     "icon": "format-list-bulleted",
-    "color": "#ff9800" // Turuncu: Genel liste
+    "color": "#ff9800"
+  },
+  {
+    "title": "Kullanıcı Hata/Talepleri",
+    "screen": "UserRequests",
+    "icon": "playlist-check",
+    "color": "#ff9800"
   }
 ]

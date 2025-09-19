@@ -19,6 +19,7 @@ import RequestsScreen from './src/screens/RequestsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import ErrorDetailScreen from './src/screens/ErrorDetailScreen';
 import RequestDetailScreen from './src/screens/RequestDetailScreen';
+import UserRequestsScreen from './src/screens/UserRequestsScreen';
 import GeneralInfoScreen from './src/screens/GeneralInfoScreen';
 import UsersScreen from './src/screens/UsersScreen';
 import { initFCM } from './src/notifications/notifications';
@@ -34,6 +35,7 @@ const componentMap: Record<string, any> = {
   SettingsScreen,
   ErrorDetailScreen,
   RequestDetailScreen,
+  UserRequestsScreen,
   GeneralInfoScreen,
   UsersScreen,
 };

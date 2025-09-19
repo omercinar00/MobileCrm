@@ -25,6 +25,7 @@ import {
   formatDate2,
 } from '../utils';
 import RenderHTML from 'react-native-render-html';
+import DocumentListMobile from '../components/DocumentListMobile';
 interface RequestDetailScreenProps {
   navigation?: any;
   route?: any;
@@ -283,51 +284,7 @@ function RequestDetailScreen({ navigation, route }: RequestDetailScreenProps) {
     />
   );
 
-  const DocumentsRoute = () => (
-    <KeyboardAwareFlatList
-      data={documents}
-      keyExtractor={(item, index) => item?.Oid?.toString() || index.toString()}
-      renderItem={({ item }) => {
-        const ext = item.FileExtension;
-        return (
-          <TouchableOpacity
-            style={[
-              styles.docItem,
-              {
-                flexDirection: 'row',
-                alignItems: 'center',
-                backgroundColor: theme.cardBackground,
-              },
-            ]}
-            onPress={() => {
-              const fileUrl = `https://YOUR_SERVER_URL/${item.FileUrl.replace(
-                /\\/g,
-                '/',
-              )}`;
-              if (['.png', '.jpg', '.jpeg', '.gif'].includes(ext || '')) {
-                navigation.navigate('ImagePreview', { uri: fileUrl });
-              } else {
-                Linking.openURL(fileUrl);
-              }
-            }}
-          >
-            <MaterialCommunityIcons
-              name={getFileIcon(ext)}
-              size={24}
-              color={theme.primary}
-            />
-            <Text style={{ color: theme.text, marginLeft: 10 }}>
-              {item.FileDisplayname || item.OriginalFilename}
-            </Text>
-          </TouchableOpacity>
-        );
-      }}
-      ListEmptyComponent={
-        <Text style={{ color: theme.text }}>Henüz döküman yok</Text>
-      }
-      contentContainerStyle={{ padding: 10 }}
-    />
-  );
+  const DocumentsRoute = () => <DocumentListMobile documents={documents} />;
 
   const renderScene = SceneMap({
     details: DetailsRoute,

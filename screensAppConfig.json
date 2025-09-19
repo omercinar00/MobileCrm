@@ -57,5 +57,11 @@
     "component": "RequestDetailScreen",
     "headerShown": true,
     "headerTitle": "Talep Detay"
+  },
+  {
+    "name": "UserRequests",
+    "component": "UserRequestsScreen",
+    "headerShown": true,
+    "headerTitle": "Kullanıcı Hata/Talepleri "
   }
 ]
